@@ -1061,7 +1061,6 @@
           <div class="det-linha"><span>Distância até você</span><span id="resDistancia">—</span></div>
           <div class="det-linha"><span>Tipo de serviço</span><span id="resTipo">—</span></div>
           <div class="det-linha"><span>Número de viagens</span><span id="resViagens">—</span></div>
-          <div class="det-linha"><span>Cálculo</span><span id="resCalculo">—</span></div>
         </div>
       </div>
 
@@ -1319,7 +1318,6 @@ async function calcularEntrega() {
     const tipoLabel = opcaoSelecionada === 'entrega-retirada' ? 'Entrega + Retirada' : opcaoSelecionada === 'so-entrega' ? 'Só Entrega' : 'Só Retirada';
     document.getElementById('resTipo').textContent = tipoLabel;
     document.getElementById('resViagens').textContent = `${viagens} viagens`;
-    document.getElementById('resCalculo').textContent = `${distanciaArredondada}km × ${viagens} viagens × 1,2 = R$ ${valorTotal.toFixed(2).replace('.',',')}`;
 
   } catch(e) {
     document.getElementById('calcLoading').classList.remove('visivel');
