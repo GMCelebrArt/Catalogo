@@ -1286,20 +1286,15 @@ async function calcularEntrega() {
     if (cepData.erro) throw new Error('CEP não encontrado. Verifique e tente novamente.');
 
     const enderecoCliente = `${cepData.logradouro}, ${cepData.localidade}, ${cepData.uf}, Brasil`;
-    const enderecoOrigem = 'Rua Cyro Correia Pereira 3689, CIC, Curitiba, PR, Brasil';
+    // 2. Coordenadas fixas da origem (Rua Cyro Correia Pereira, CIC, Curitiba)
+    const oLat = -25.4728, oLon = -49.3481;
 
-    // 2. Geocodificar origem
-    const geoOrigem = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(enderecoOrigem)}&format=json&limit=1`, {headers:{'User-Agent':'GMCelebrArt/1.0'}});
-    const origemData = await geoOrigem.json();
-    if (!origemData.length) throw new Error('Não foi possível localizar o endereço de origem.');
-
-    // 3. Geocodificar destino
+    // 3. Geocodificar destino pelo CEP
     const geoDestino = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(enderecoCliente)}&format=json&limit=1`, {headers:{'User-Agent':'GMCelebrArt/1.0'}});
     const destinoData = await geoDestino.json();
     if (!destinoData.length) throw new Error('Não foi possível localizar o CEP informado. Tente com outro CEP próximo.');
 
     // 4. Calcular distância usando OSRM (rota real)
-    const oLat = origemData[0].lat, oLon = origemData[0].lon;
     const dLat = destinoData[0].lat, dLon = destinoData[0].lon;
 
     const osrm = await fetch(`https://router.project-osrm.org/route/v1/driving/${oLon},${oLat};${dLon},${dLat}?overview=false`);
