@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GM CelebrArt — Kits Pegue e Monte</title>
+<meta name="description" content="Kits de decoração Pegue e Monte para festas em Curitiba e região. Você retira, monta em minutos e devolve. A partir de R$120.">
+<meta name="theme-color" content="#e8a0b4">
+<link rel="icon" href="icone.png">
+<link rel="apple-touch-icon" href="icone.png">
+
+<!-- preview do link no WhatsApp, Facebook e afins -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GM CelebrArt">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:url" content="https://gmcelebrart.github.io/Catalogo/">
+<meta property="og:title" content="GM CelebrArt — Kits Pegue e Monte">
+<meta property="og:description" content="Kits de decoração Pegue e Monte para festas em Curitiba e região. Você retira, monta em minutos e devolve. A partir de R$120.">
+<meta property="og:image" content="https://gmcelebrart.github.io/Catalogo/capa.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Montagens de festa feitas pela GM CelebrArt">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -135,6 +152,20 @@ section { padding:70px 30px; }
 .plano-itens li::before { content:'●'; color:var(--rosa); font-size:0.5rem; flex-shrink:0; }
 
 /* TEMAS *//* GALERIA DE FESTAS */
+/* BOTÃO FLUTUANTE DO WHATSAPP */
+.wpp-flutuante {
+  position:fixed; z-index:900;
+  right:18px; bottom:18px; bottom:calc(18px + env(safe-area-inset-bottom));
+  width:56px; height:56px; border-radius:50%;
+  background:var(--rosa-escuro); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 20px rgba(201,96,124,0.45);
+  opacity:0; visibility:hidden; transform:translateY(14px) scale(0.9);
+  transition:opacity .3s ease, transform .3s ease, visibility .3s;
+}
+.wpp-flutuante.visivel { opacity:1; visibility:visible; transform:none; }
+.wpp-flutuante svg { width:29px; height:29px; }
+@media (prefers-reduced-motion: reduce) { .wpp-flutuante { transition:none; } }
 .galeria-bg { background:var(--creme); }
 .galeria { position:relative; max-width:430px; margin:0 auto; }
 .galeria-track {
@@ -729,6 +760,12 @@ footer p { font-size:0.78rem; line-height:1.8; }
   © 2025 GM CelebrArt. Todos os direitos reservados.</p>
 </footer>
 
+<!-- BOTAO FLUTUANTE WHATSAPP -->
+<a class="wpp-flutuante" id="wppFlutuante" aria-label="Falar no WhatsApp"
+   href="https://wa.me/5541998204206?text=Ol%C3%A1!%20Vi%20o%20cat%C3%A1logo%20da%20GM%20CelebrArt%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es." target="_blank" rel="noopener">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.815 11.815 0 005.644 1.437h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/></svg>
+</a>
+
 <!-- POPUP -->
 <div class="popup-overlay" id="popupOverlay" onclick="fecharPopupFora(event)">
   <div class="popup" id="popup">
@@ -864,6 +901,26 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') fotoAnterior();
 });
 
+
+// BOTAO FLUTUANTE WHATSAPP
+(function() {
+  var botao = document.getElementById("wppFlutuante");
+  if (!botao) return;
+  var overlay = document.getElementById("popupOverlay");
+
+  function atualizar() {
+    var passouHero = (window.pageYOffset || document.documentElement.scrollTop || 0) > 420;
+    var popupAberto = !!(overlay && overlay.classList.contains("ativo"));
+    botao.className = "wpp-flutuante" + (passouHero && !popupAberto ? " visivel" : "");
+  }
+  window.atualizarWpp = atualizar;
+
+  window.addEventListener("scroll", atualizar, { passive: true });
+  window.addEventListener("resize", atualizar, { passive: true });
+  // o popup abre e fecha por clique — reavalia logo depois
+  document.addEventListener("click", function() { setTimeout(atualizar, 60); }, { passive: true });
+  atualizar();
+})();
 
 // GALERIA DE FESTAS
 (function() {
