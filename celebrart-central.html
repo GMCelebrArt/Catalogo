@@ -86,6 +86,15 @@ body{background:#faf6f2;min-height:100vh}
 #aba-orcamento .addrow button{flex:0 0 42px;border:1px solid var(--rose);background:#fff5f6;color:var(--rose-deep);border-radius:9px;font-size:19px;cursor:pointer}
 #aba-orcamento .addrow input.erro{border-color:#c0392b;background:#fdf1ef}
 #aba-orcamento li.item .rm{flex:0 0 26px;width:26px;height:26px;border:none;background:#f6e9ec;color:#a05563;border-radius:7px;font-size:13px;cursor:pointer;line-height:1}
+#aba-orcamento li.item .ed{flex:0 0 26px;width:26px;height:26px;border:none;background:#eef0f7;color:#5a6b96;border-radius:7px;font-size:12px;cursor:pointer;line-height:1;margin-left:2px}
+#aba-orcamento li.item.editando{gap:6px;background:#fdf7f8;border-radius:8px;padding:8px 6px}
+#aba-orcamento li.item.editando input{border:1px solid #e6d3d8;border-radius:7px;padding:7px 8px;font:inherit;font-size:.85rem;min-width:0;background:#fff}
+#aba-orcamento li.item.editando .ed-nome{flex:1 1 auto}
+#aba-orcamento li.item.editando .ed-valor{flex:0 0 80px;width:80px}
+#aba-orcamento li.item.editando .ed-ok,#aba-orcamento li.item.editando .ed-cancel{flex:0 0 30px;width:30px;height:30px;border:none;border-radius:7px;font-size:13px;cursor:pointer;line-height:1}
+#aba-orcamento li.item.editando .ed-ok{background:#dff1e4;color:#2f7a45}
+#aba-orcamento li.item.editando .ed-cancel{background:#f6e9ec;color:#a05563}
+#aba-orcamento li.item.editando input.erro{border-color:#d9534f;background:#fdf1f1}
 
 /* ═══ ABA PROPOSTA (escopo #aba-proposta) ═══ */
 #aba-proposta{
@@ -147,15 +156,6 @@ body{background:#faf6f2;min-height:100vh}
   background:var(--texto); color:#fff; padding:11px 20px; border-radius:30px; font-size:13.5px;
   opacity:0; pointer-events:none; transition:.25s; z-index:80}#aba-proposta #aviso.ver{opacity:1; transform:translateX(-50%) translateY(0)}/* impressão */
 #aba-proposta #folha-print{display:none}
-#gm-dl-bar{position:fixed; left:12px; right:12px; bottom:12px; z-index:120;
-  background:#fff; border:1px solid var(--rosa-escuro); border-radius:14px;
-  box-shadow:0 8px 26px rgba(0,0,0,.18); display:flex; align-items:center; gap:8px;
-  padding:10px 10px 10px 14px; font-family:'Jost',sans-serif}
-#gm-dl-bar a{flex:1; color:var(--rosa-escuro); font-size:13.5px; font-weight:500;
-  text-decoration:none; line-height:1.3}
-#gm-dl-bar a small{display:block; color:#8a8a8a; font-weight:400; font-size:11px; margin-top:2px}
-#gm-dl-bar button{flex:0 0 auto; width:30px; height:30px; border:none; background:#f3dde4;
-  color:var(--rosa-escuro); border-radius:9px; font-size:14px; cursor:pointer}
 
 /* ═══ ABA CONTRATO (escopo #aba-contrato) ═══ */
 #aba-contrato{
@@ -278,11 +278,14 @@ body{background:#faf6f2;min-height:100vh}
     <input type="number" id="pct" value="30" min="0" max="100">
     <span style="font-size:13px;color:#8a6b70">% do valor de compra</span>
   </div>
+  <p class="hint" style="text-align:left;margin-top:10px">Toque em ✎ para mudar nome e valor de compra, ou em × para remover.
+    <a href="#" id="restaurar-acervo" style="color:#c9607c">Restaurar lista original</a></p>
 </div>
 
 <div class="card">
   <span class="lbl">Por evento</span>
   <div class="row"><span>Adesivo personalizado (uso único)</span><input type="number" id="adesivo" placeholder="0,00"></div>
+  <div class="row"><span>Arco de balões</span><input type="number" id="arco" placeholder="0,00"></div>
   <div class="row"><span>Montagem + retirada</span><input type="number" id="montagem" placeholder="0,00"></div>
   <div class="row"><span>Frete / deslocamento</span><input type="number" id="frete" placeholder="0,00"></div>
   <p class="hint" style="text-align:left">Pegue e Monte: deixe montagem e frete em branco.</p>
@@ -797,8 +800,27 @@ const ITENS_BASE=[
 ];
 let EXTRAS_ACERVO=jparse(LS.get('gm_acervo_extra'),[]);
 if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
-function acervo(){ return ITENS_BASE.concat(EXTRAS_ACERVO); }
-function itemPorNome(n){ return acervo().find(it=>it.n===n); }
+
+/* Acervo editável: começa com os itens base + os extras antigos.
+   A partir daqui tudo (nome, valor, remoção) é livre e fica salvo. */
+const limpaAcervo=a=>Array.isArray(a)?a.filter(x=>x&&typeof x.n==='string'&&x.n.trim()&&isFinite(x.c)):null;
+let ACERVO=limpaAcervo(jparse(LS.get('gm_acervo'),null));
+if(!ACERVO){
+  // b = nome de fábrica (marca os itens originais, mesmo depois de renomeados)
+  ACERVO=ITENS_BASE.map(it=>({n:it.n,c:+it.c,b:it.n}))
+          .concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c})));
+  LS.set('gm_acervo',JSON.stringify(ACERVO));
+}
+function salvarAcervo(){ LS.set('gm_acervo',JSON.stringify(ACERVO)); }
+function acervo(){ return ACERVO; }
+function itemPorNome(n){ return ACERVO.find(it=>it.n===n); }
+/* restaura a lista original de fábrica, mantendo os itens que você criou */
+function restaurarAcervoPadrao(){
+  // mantém só os itens que você criou (sem marca de fábrica) e ressemeia os originais
+  const meus=ACERVO.filter(it=>!it.b && !ITENS_BASE.some(b=>b.n===it.n));
+  ACERVO=ITENS_BASE.map(it=>({n:it.n,c:+it.c,b:it.n})).concat(meus);
+  salvarAcervo();
+}
 
 const DEFAULT_KITS={
   bronze:['Painel / Estante de fundo','Boleiras bambu (5)','Tecido arco / forração'],
@@ -822,20 +844,82 @@ const $o=id=>document.getElementById(id);
 const pctEl=$o('pct');
 const list=$o('list');
 
+let editando=null;   // nome do item em modo de edição
+
+function renomearNosKits(antigo,novo){
+  let mudou=false;
+  for(const k in KITS){
+    if(Array.isArray(KITS[k])&&KITS[k].includes(antigo)){
+      KITS[k]=KITS[k].map(x=>x===antigo?novo:x); mudou=true;
+    }
+  }
+  if(mudou) LS.set('gm_kits',JSON.stringify(KITS));
+}
+function removerDosKits(nome){
+  let mudou=false;
+  for(const k in KITS){
+    if(Array.isArray(KITS[k])&&KITS[k].includes(nome)){
+      KITS[k]=KITS[k].filter(x=>x!==nome); mudou=true;
+    }
+  }
+  if(mudou) LS.set('gm_kits',JSON.stringify(KITS));
+}
+
 function build(){
   list.innerHTML='';
   const p=+pctEl.value/100;
   acervo().forEach(it=>{
-    const custom=!ITENS_BASE.some(b=>b.n===it.n);
-    const li=document.createElement('li');li.className='item'+(checked.has(it.n)?' on':'');
+    const li=document.createElement('li');
+
+    if(editando===it.n){                      // ---- modo edição ----
+      li.className='item editando';
+      li.innerHTML=`<input type="text" class="ed-nome" value="${it.n.replace(/"/g,'&quot;')}" maxlength="42">
+        <input type="number" class="ed-valor" value="${it.c}" min="0" step="0.01" inputmode="decimal">
+        <button class="ed-ok" title="Salvar">✓</button>
+        <button class="ed-cancel" title="Cancelar">✕</button>`;
+      const nEl=li.querySelector('.ed-nome'), vEl=li.querySelector('.ed-valor');
+      const fechar=()=>{editando=null;build();total();};
+      const gravar=()=>{
+        const novoNome=nEl.value.trim();
+        const novoVal=parseFloat(vEl.value);
+        let ok=true;
+        if(!novoNome || (novoNome!==it.n && itemPorNome(novoNome))){nEl.classList.add('erro');ok=false;setTimeout(()=>nEl.classList.remove('erro'),1200);}
+        if(!(novoVal>=0)||!isFinite(novoVal)){vEl.classList.add('erro');ok=false;setTimeout(()=>vEl.classList.remove('erro'),1200);}
+        if(!ok) return;
+        const antigo=it.n;
+        if(novoNome!==antigo){
+          renomearNosKits(antigo,novoNome);
+          if(checked.has(antigo)){checked.delete(antigo);checked.add(novoNome);}
+        }
+        it.n=novoNome; it.c=Math.round(novoVal*100)/100;   // it.b (marca de fábrica) é preservada
+        salvarAcervo();
+        fechar();
+      };
+      li.onclick=ev=>ev.stopPropagation();
+      li.querySelector('.ed-ok').onclick=ev=>{ev.stopPropagation();gravar();};
+      li.querySelector('.ed-cancel').onclick=ev=>{ev.stopPropagation();fechar();};
+      [nEl,vEl].forEach(el=>el.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){e.preventDefault();gravar();}
+        if(e.key==='Escape'){e.preventDefault();fechar();}
+      }));
+      list.appendChild(li);
+      setTimeout(()=>nEl.focus(),0);
+      return;
+    }
+
+    li.className='item'+(checked.has(it.n)?' on':'');
     li.innerHTML=`<div class="box">${checked.has(it.n)?'✓':''}</div>
-      <div class="nm">${it.n}</div><div class="vl">${fmt(it.c*p)}</div>${custom?'<button class="rm" title="Remover do acervo">×</button>':''}`;
+      <div class="nm">${it.n}</div><div class="vl">${fmt(it.c*p)}</div>
+      <button class="ed" title="Editar nome e valor">✎</button>
+      <button class="rm" title="Remover do acervo">×</button>`;
     li.onclick=()=>{checked.has(it.n)?checked.delete(it.n):checked.add(it.n);kitAtual=null;syncKitBtns();build();total();};
-    const rm=li.querySelector('.rm');
-    if(rm) rm.onclick=(ev)=>{
+    li.querySelector('.ed').onclick=ev=>{ev.stopPropagation();editando=it.n;build();};
+    li.querySelector('.rm').onclick=ev=>{
       ev.stopPropagation();
-      EXTRAS_ACERVO=EXTRAS_ACERVO.filter(x=>x.n!==it.n);
-      LS.set('gm_acervo_extra',JSON.stringify(EXTRAS_ACERVO));
+      if(!confirm('Remover "'+it.n+'" do acervo?')) return;
+      ACERVO=ACERVO.filter(x=>x.n!==it.n);
+      salvarAcervo();
+      removerDosKits(it.n);
       checked.delete(it.n);
       build();total();
     };
@@ -846,6 +930,7 @@ function total(){
   const p=+pctEl.value/100;
   let t=0;checked.forEach(n=>{const it=itemPorNome(n);if(it)t+=it.c*p;});
   t+=(+$o('adesivo').value||0);
+  t+=(+$o('arco').value||0);
   t+=(+$o('montagem').value||0);
   t+=(+$o('frete').value||0);
   $o('totalVal').textContent=fmtShort(Math.round(t*100)/100);
@@ -877,8 +962,8 @@ $o('novo-add').onclick=()=>{
   if(!nome || itemPorNome(nome)){nEl.classList.add('erro');ok=false;setTimeout(()=>nEl.classList.remove('erro'),1200);}
   if(!(val>0)){vEl.classList.add('erro');ok=false;setTimeout(()=>vEl.classList.remove('erro'),1200);}
   if(!ok) return;
-  EXTRAS_ACERVO.push({n:nome,c:Math.round(val*100)/100});
-  LS.set('gm_acervo_extra',JSON.stringify(EXTRAS_ACERVO));
+  ACERVO.push({n:nome,c:Math.round(val*100)/100});
+  salvarAcervo();
   checked.add(nome);
   nEl.value='';vEl.value='';
   build();total();
@@ -886,18 +971,29 @@ $o('novo-add').onclick=()=>{
 $o('novo-valor').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$o('novo-add').onclick();}});
 $o('novo-nome').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$o('novo-valor').focus();}});
 
-['pct','adesivo','montagem','frete'].forEach(id=>$o(id).addEventListener('input',()=>{build();total();}));
+const btRest=$o('restaurar-acervo');
+if(btRest) btRest.onclick=ev=>{
+  ev.preventDefault();
+  if(!confirm('Restaurar a lista original de itens? Os itens que você criou continuam na lista.')) return;
+  restaurarAcervoPadrao();
+  editando=null;
+  build();total();
+};
+
+['pct','adesivo','arco','montagem','frete'].forEach(id=>$o(id).addEventListener('input',()=>{build();total();}));
 
 $o('copy').onclick=()=>{
   const p=+pctEl.value/100;let linhas=[];let t=0;
   acervo().forEach(it=>{if(checked.has(it.n)){linhas.push('• '+it.n);t+=it.c*p;}});
   const ad=+$o('adesivo').value||0;
+  const ar=+$o('arco').value||0;
   const mo=+$o('montagem').value||0;
   const fr=+$o('frete').value||0;
   if(ad)linhas.push('• Adesivo personalizado');
+  if(ar)linhas.push('• Arco de balões');
   let extra=[];
   if(mo||fr)extra.push('Inclui montagem no local e retirada após a festa.');
-  t+=ad+mo+fr;
+  t+=ad+ar+mo+fr;
   const txt=`✦ GM CelebrArt ✦\n\nDecoração inclusa:\n${linhas.join('\n')}\n\n${extra.join(' ')}\nValor: ${fmt(Math.round(t*100)/100)}`.trim();
   navigator.clipboard.writeText(txt).then(()=>{
     $o('copied').textContent='Copiado! É só colar no WhatsApp.';
@@ -910,16 +1006,19 @@ function dados(){
   let aluguel=0;const nomes=[];
   acervo().forEach(it=>{if(checked.has(it.n)){aluguel+=it.c*p;nomes.push(it.n);}});
   const ad=+$o('adesivo').value||0;
+  const ar=+$o('arco').value||0;
   const mo=+$o('montagem').value||0;
   const fr=+$o('frete').value||0;
   const r2=x=>Math.round(x*100)/100;
+  if(ar) nomes.push('Arco de balões');
   return {
     itens:nomes,
     kitNome:kitAtual?('Kit '+kitAtual.charAt(0).toUpperCase()+kitAtual.slice(1)):null,
-    valorKit:r2(aluguel+ad),
+    valorKit:r2(aluguel+ad+ar),
     temAdesivo:ad>0,
+    temArco:ar>0,
     servico:r2(mo+fr),
-    total:r2(aluguel+ad+mo+fr)
+    total:r2(aluguel+ad+ar+mo+fr)
   };
 }
 window.ORC={dados};
@@ -937,8 +1036,8 @@ build();total();
 const LOGO_SRC = 'data:image/webp;base64,' + LOGO_B64;
 const $ = id => document.getElementById(id);
 const ROOT = document.getElementById('aba-proposta');
-const __LS={get(k){try{return __LS.get(k)}catch(_){return null}},
-  set(k,v){try{__LS.set(k,v)}catch(_){}}};
+const __LS={get(k){try{return localStorage.getItem(k)}catch(_){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
 function __jp(s,fb){try{const v=JSON.parse(s);return v==null?fb:v}catch(_){return fb}}
 
 const KITS = {
@@ -1528,83 +1627,60 @@ $('inp-img').addEventListener('change', e => {
 });
 
 /* ───── exportação ───── */
-const __IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
-  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-/* barra de toque: iOS bloqueia download programático, então o usuário toca no link */
-function __linkManual(blob, nome, rotulo){
-  const url = URL.createObjectURL(blob);
-  const velha = document.getElementById('gm-dl-bar');
-  if(velha){ if(velha.dataset.url) URL.revokeObjectURL(velha.dataset.url); velha.remove(); }
-  const bar = document.createElement('div');
-  bar.id = 'gm-dl-bar';
-  bar.dataset.url = url;
-  const a = document.createElement('a');
-  a.href = url; a.download = nome; a.target = '_blank'; a.rel = 'noopener';
-  a.innerHTML = (rotulo || '📄 Toque para abrir o arquivo') +
-    '<small>Depois use ⬆️ Compartilhar › Salvar em Arquivos</small>';
-  const x = document.createElement('button');
-  x.type = 'button'; x.textContent = '✕';
-  x.onclick = () => { URL.revokeObjectURL(url); bar.remove(); };
-  bar.appendChild(a); bar.appendChild(x);
-  document.body.appendChild(bar);
-  setTimeout(() => { if(document.body.contains(bar)){ URL.revokeObjectURL(url); bar.remove(); } }, 120000);
-}
-
-function entregarArquivo(blob, nome, rotulo){
-  /* 1) folha de compartilhamento (iPhone: Salvar em Arquivos / enviar no WhatsApp) */
-  try{
-    const arq = new File([blob], nome, {type: blob.type});
-    if(navigator.canShare && navigator.canShare({files:[arq]}) && navigator.share){
-      navigator.share({files:[arq], title: nome})
-        .then(() => avisar('Pronto ✓'))
-        .catch(err => {
-          if(err && err.name === 'AbortError') return;
-          __linkManual(blob, nome, rotulo);
-          avisar('Toque no link abaixo');
-        });
-      return;
-    }
-  }catch(e){ /* segue para as outras rotas */ }
-  /* 2) desktop: download direto */
-  if(!__IOS){
-    const a = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    a.href = url; a.download = nome;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    avisar('Arquivo baixado ✓');
-    return;
-  }
-  /* 3) iOS sem share: link manual */
-  __linkManual(blob, nome, rotulo);
-  avisar('Toque no link abaixo');
-}
-
 function nomeArquivo(ext){
   const c = (estado.cliente || 'proposta').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   return `gm-celebrart-${c}.${ext}`;
 }
+/* iOS/iPadOS: Safari ignora a.download e bloqueia click assíncrono; melhor abrir em nova aba */
+function ehIOS(){
+  const ua = navigator.userAgent || '';
+  return /iP(hone|ad|od)/.test(ua) || (/Mac/.test(navigator.platform||'') && navigator.maxTouchPoints > 1);
+}
+/* fonts.ready pode nunca resolver (fonte bloqueada/arquivo local) — corre contra um limite */
+function fontsProntas(){
+  const t = new Promise(r => setTimeout(r, 1500));
+  const f = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  return Promise.race([f, t]);
+}
+/* entrega o blob: baixa no desktop, abre em aba nova no iOS */
+function entregar(blob, filename, janelaPre){
+  const url = URL.createObjectURL(blob);
+  if(janelaPre){                       // aba já aberta no gesto (iOS)
+    janelaPre.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    return true;                        // abriu
+  }
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+  return false;                         // baixou
+}
 function baixarPNG(){
   coletar();
   avisar('Gerando imagem…');
-  document.fonts.ready.then(() => layoutParaCanvas(montarLayout()))
-    .then(cv => new Promise(res => cv.toBlob(b => res(b), 'image/png')))
-    .then(blob => entregarArquivo(blob, nomeArquivo('png'), '🖼️ Toque para abrir a imagem'))
-    .catch(err => { avisar('Erro ao gerar imagem'); console.error(err); });
+  const win = ehIOS() ? window.open('', '_blank') : null;
+  fontsProntas().then(() => layoutParaCanvas(montarLayout())).then(cv => {
+    cv.toBlob(blob => {
+      const abriu = entregar(blob, nomeArquivo('png'), win);
+      avisar(abriu ? 'Imagem aberta — use Compartilhar p/ salvar' : 'Imagem baixada ✓');
+    }, 'image/png');
+  }).catch(err => { if(win) win.close(); avisar('Erro ao gerar imagem'); console.error(err); });
 }
 function baixarPDF(){
   coletar();
   avisar('Gerando PDF…');
-  document.fonts.ready.then(() => layoutParaCanvas(montarLayout())).then(cv => {
+  const win = ehIOS() ? window.open('', '_blank') : null;
+  fontsProntas().then(() => layoutParaCanvas(montarLayout())).then(cv => {
     const jpeg = cv.toDataURL('image/jpeg', 0.92).split(',')[1];
     const bin = atob(jpeg);
     const bytes = new Uint8Array(bin.length);
     for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     const blob = montarPDF(bytes, cv.width, cv.height);
+    const abriu = entregar(blob, nomeArquivo('pdf'), win);
     if(!estado.numero){ const s = +(__LS.get('gm_prop_seq')||0)+1; __LS.set('gm_prop_seq', s); }
-    entregarArquivo(blob, nomeArquivo('pdf'), '📄 Toque para abrir o PDF');
-  }).catch(err => { avisar('Erro ao gerar PDF'); console.error(err); });
+    avisar(abriu ? 'PDF aberto — use Compartilhar p/ salvar' : 'PDF baixado ✓');
+  }).catch(err => { if(win) win.close(); avisar('Erro ao gerar PDF'); console.error(err); });
 }
 
 /* monta um PDF mínimo (uma página) com a imagem JPEG embutida */
@@ -2248,11 +2324,21 @@ function gerarPDF(modo){
   document.body.classList.add('modo-'+modo);
   document.title = prefixo + 'GM_CelebrArt_' + nome;
   render();
-  setTimeout(()=>{
-    window.print();
+  // restaura só DEPOIS de imprimir (iOS não bloqueia no print, então não dá pra limpar na hora)
+  let limpo = false;
+  const restaurar = () => {
+    if(limpo) return; limpo = true;
     document.title = tmp;
     document.body.classList.remove('modo-'+modo);
-  }, 150);
+    window.removeEventListener('afterprint', restaurar);
+  };
+  window.addEventListener('afterprint', restaurar);
+  setTimeout(() => {
+    try { window.print(); }
+    catch(err){ console.error('print falhou', err); }
+    // fallback caso afterprint não dispare (alguns navegadores mobile)
+    setTimeout(restaurar, 3000);
+  }, 200);
 }
 
 /* ---------- LIMPAR ---------- */
