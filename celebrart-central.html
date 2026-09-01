@@ -99,7 +99,14 @@ body{background:#faf6f2;min-height:100vh}
 #aba-orcamento li.item.editando{flex-wrap:wrap}
 #aba-orcamento li.cat-cab{display:flex;align-items:center;gap:8px;padding:14px 4px 6px;border-bottom:none;cursor:default;list-style:none}
 #aba-orcamento li.cat-cab:first-child{padding-top:4px}
+#aba-orcamento li.cat-cab{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;border-radius:9px;transition:background .15s}
+#aba-orcamento li.cat-cab:active{background:#fbf1f3}
+#aba-orcamento li.cat-cab.aberta{background:#fdf7f8}
+#aba-orcamento li.cat-cab .cat-seta{flex:0 0 14px;font-size:.7rem;color:#c9a3ad;line-height:1}
 #aba-orcamento li.cat-cab .cat-nome{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:#c9607c;letter-spacing:.02em}
+#aba-orcamento li.cat-cab .cat-cont.tem{background:#c9607c;color:#fff;border-radius:20px;padding:1px 8px;font-size:.68rem}
+#aba-orcamento .acervo-topo{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#aba-orcamento #bt-limpar{flex:0 0 auto;padding:6px 12px;font-size:.72rem;border:1px solid #eddfe3;background:#fff;color:#a05563;border-radius:20px;cursor:pointer}
 #aba-orcamento li.cat-cab .cat-tag{font-size:.63rem;color:#9c8a8f;background:#f6eef0;border-radius:20px;padding:2px 8px;white-space:nowrap}
 #aba-orcamento li.cat-cab .cat-cont{margin-left:auto;font-size:.7rem;color:#b09aa0}
 #aba-orcamento li.cat-cab.oculta .cat-nome{color:#7d8aa8}
@@ -258,23 +265,10 @@ body{background:#faf6f2;min-height:100vh}
 <section class="aba ativa" id="aba-orcamento">
 
 <div class="card">
-  <span class="lbl">Kit padrão</span>
-  <div class="kits">
-    <button class="kit" data-kit="bronze">Bronze</button>
-    <button class="kit" data-kit="prata">Prata</button>
-    <button class="kit" data-kit="ouro">Ouro</button>
-    <button class="kit clear" data-kit="clear">Limpar</button>
+  <div class="acervo-topo">
+    <span class="lbl">Itens do acervo</span>
+    <button class="kit clear" data-kit="clear" id="bt-limpar">Limpar seleção</button>
   </div>
-  <div class="save" id="saveToggle">⚙ definir o que vem em cada kit</div>
-  <div class="saverow" id="saveRow">
-    <button data-save="bronze">Salvar seleção → Bronze</button>
-    <button data-save="prata">Salvar → Prata</button>
-    <button data-save="ouro">Salvar → Ouro</button>
-  </div>
-</div>
-
-<div class="card">
-  <span class="lbl">Itens do acervo</span>
   <ul id="list"></ul>
   <div class="addrow">
     <input type="text" class="an" id="novo-nome" placeholder="Novo item (ex.: Cesto de flores)" maxlength="42">
@@ -797,54 +791,102 @@ function jparse(s,fb){try{const v=JSON.parse(s);return v==null?fb:v}catch(_){ret
 const CATS=[
   {id:'materiais', nome:'Materiais de uso e consumo', oculta:true},
   {id:'paineis',   nome:'Painéis'},
+  {id:'mesas',     nome:'Mesas e estantes'},
   {id:'cilindros', nome:'Cilindros'},
   {id:'bandejas',  nome:'Boleiras e bandejas'},
   {id:'capas',     nome:'Capas e tecidos'},
   {id:'displays',  nome:'Displays'},
+  {id:'flores',    nome:'Flores'},
   {id:'decoracao', nome:'Decoração'},
+  {id:'tapetes',   nome:'Tapetes'},
+  {id:'bolos',     nome:'Bolos fake'},
 ];
 const CAT_PADRAO='decoracao';
 const catOculta=id=>{const c=CATS.find(x=>x.id===id);return !!(c&&c.oculta);};
 
 const ITENS_BASE=[
-  // materiais (não aparecem para o cliente)
+  // ── materiais de uso e consumo (não aparecem para o cliente) ──
   {n:'Máquina de balão',c:66.36,cat:'materiais'},
+  {n:'Spray de balão',c:60.00,cat:'materiais'},
   {n:'Presilhas',c:25.25,cat:'materiais'},
   {n:'Elástico amarelo',c:10.90,cat:'materiais'},
-  {n:'Spray de balão',c:0,cat:'materiais'},
-  // painéis
-  {n:'Painel romano',c:209.90,cat:'paineis'},
-  {n:'Painel redondo',c:0,cat:'paineis'},
-  {n:'Painel romano ripado',c:0,cat:'paineis'},
-  // cilindros
-  {n:'Cilindro',c:0,cat:'cilindros'},
-  {n:'Cilindro ripado',c:0,cat:'cilindros'},
-  // boleiras e bandejas
-  {n:'Kit boleira espelho',c:174.00,cat:'bandejas'},
-  {n:'Boleiras bambu (5)',c:91.22,cat:'bandejas'},
+  // ── painéis ──
+  {n:'Painel romano ripado',c:184.20,cat:'paineis'},
+  {n:'Arco romano',c:125.00,cat:'paineis'},
+  {n:'Arco redondo',c:125.00,cat:'paineis'},
+  // ── mesas e estantes ──
+  {n:'Mesas treliças',c:253.01,cat:'mesas'},
+  {n:'Cômoda fake amarela',c:180.00,cat:'mesas'},
+  {n:'Cômoda fake branca',c:90.00,cat:'mesas'},
+  // ── cilindros ──
+  {n:'Trio de cilindro ripado',c:442.20,cat:'cilindros'},
+  {n:'Trio de cilindro',c:121.42,cat:'cilindros'},
+  // ── boleiras e bandejas ──
+  {n:'Kit boleiras espelhadas',c:174.00,cat:'bandejas'},
+  {n:'Kit boleiras bambu (5)',c:91.22,cat:'bandejas'},
+  {n:'Kit boleiras cristal',c:84.07,cat:'bandejas'},
+  {n:'Vasos grandes bege (2)',c:70.92,cat:'bandejas'},
+  {n:'Kit boleiras rosa candy',c:68.20,cat:'bandejas'},
+  {n:'Kit boleiras Patrulha Canina',c:67.79,cat:'bandejas'},
+  {n:'Boleira amarelo candy',c:67.62,cat:'bandejas'},
+  {n:'Kit boleiras dourado',c:66.68,cat:'bandejas'},
+  {n:'Bandejas flor rosa candy (2)',c:53.48,cat:'bandejas'},
   {n:'Bandeja bambu quadrada',c:48.99,cat:'bandejas'},
+  {n:'Kit 2 mesinhas de mesa bege',c:44.25,cat:'bandejas'},
   {n:'Bandeja bambu comprida',c:41.61,cat:'bandejas'},
+  {n:'Kit 2 mesinhas de mesa azul bebê',c:37.37,cat:'bandejas'},
+  {n:'Bandejas desconstruídas bege (3)',c:36.84,cat:'bandejas'},
+  {n:'Kit 2 bandejas ovais bambu',c:36.42,cat:'bandejas'},
+  {n:'Kit 2 bandejas lilás',c:24.76,cat:'bandejas'},
+  {n:'Kit 2 bandejas laranja',c:24.76,cat:'bandejas'},
   {n:'Bandeja bambu redonda',c:22.18,cat:'bandejas'},
-  // capas e tecidos
-  {n:'Tecido arco / forração',c:89.70,cat:'capas'},
-  {n:'Capas de cilindro',c:36.86,cat:'capas'},
-  {n:'Capa painel romano',c:0,cat:'capas'},
-  {n:'Capa painel romano ripado',c:0,cat:'capas'},
-  {n:'Capa painel redondo',c:0,cat:'capas'},
-  // displays
-  {n:'Display de mesa',c:0,cat:'displays'},
-  {n:'Display de chão',c:0,cat:'displays'},
-  {n:'Display Divino Espírito Santo',c:0,cat:'displays'},
-  // decoração
-  {n:'Vaso grande',c:0,cat:'decoracao'},
-  {n:'Mini cavaletes (4)',c:39.97,cat:'decoracao'},
-  {n:'Mosquitinho',c:39.00,cat:'decoracao'},
+  {n:'Vasos grandes candy (2)',c:21.53,cat:'bandejas'},
+  // ── capas e tecidos ──
+  {n:'Capas cilindro + painel redondo Safari Baby',c:119.51,cat:'capas'},
+  {n:'Capas cilindro + painel redondo Patrulha Canina',c:108.72,cat:'capas'},
+  {n:'Capas cilindro + painel redondo Guerreiras K-pop',c:105.63,cat:'capas'},
+  {n:'Tecido de linho',c:89.70,cat:'capas'},
+  {n:'Capas cilindro + painel redondo branca',c:80.73,cat:'capas'},
+  {n:'Capas cilindro + painel romano Jardim Encantado',c:79.83,cat:'capas'},
+  {n:'Capas cilindro + painel redondo Dino Baby',c:76.99,cat:'capas'},
+  {n:'Capa bege e marrom painel romano',c:66.59,cat:'capas'},
+  {n:'Capa painel romano rosa bebê + azul bebê',c:52.87,cat:'capas'},
+  {n:'Capa cilindro rosa',c:42.98,cat:'capas'},
+  // ── displays ──
+  {n:'Número MDF',c:230.00,cat:'displays'},
+  {n:'Display de mesa Safari Baby',c:83.98,cat:'displays'},
+  {n:'Kit display de mesa flores, borboleta e coração',c:82.73,cat:'displays'},
+  {n:'Display de chão borboletas rosa',c:60.00,cat:'displays'},
+  {n:'Display de mesa Dino Baby',c:47.95,cat:'displays'},
+  {n:'Display de mesa Patrulha Canina',c:38.61,cat:'displays'},
+  {n:'Display de mesa Guerreiras K-pop',c:37.80,cat:'displays'},
+  {n:'Display de chão Dino Baby',c:0,cat:'displays'},
+  // ── flores ──
+  {n:'Buquês crisântemo & botão (2)',c:113.92,cat:'flores'},
+  {n:'Flor artificial branco e rosa',c:43.09,cat:'flores'},
+  {n:'Mosquitinho',c:39.00,cat:'flores'},
+  {n:'Kit 2 arbustos artificiais pequenos',c:23.60,cat:'flores'},
+  // ── decoração ──
+  {n:'Cubo Baby',c:333.95,cat:'decoracao'},
+  {n:'LED Happy Birthday',c:186.65,cat:'decoracao'},
+  {n:'Urso grande',c:162.86,cat:'decoracao'},
+  {n:'Escadinha lembrancinha branca',c:46.82,cat:'decoracao'},
+  {n:'Escadinha lembrancinha bege',c:46.82,cat:'decoracao'},
+  {n:'Vaso de chão bege grande',c:45.00,cat:'decoracao'},
+  {n:'Urso pequeno',c:42.41,cat:'decoracao'},
+  {n:'Mini cavalete',c:39.97,cat:'decoracao'},
   {n:'Base chão balão',c:24.90,cat:'decoracao'},
-  {n:'Tapete de crochê',c:0,cat:'decoracao'},
-  {n:'Tapete do tema',c:0,cat:'decoracao'},
-  {n:'Anjos decorativos (2)',c:0,cat:'decoracao'},
-  {n:'Arranjo de flores',c:0,cat:'decoracao'},
+  // ── tapetes ──
+  {n:'Tapete rosa',c:103.80,cat:'tapetes'},
+  {n:'Tapete de crochê',c:90.00,cat:'tapetes'},
+  {n:'Tapete bege',c:73.40,cat:'tapetes'},
+  {n:'Tapete verde',c:71.58,cat:'tapetes'},
+  {n:'Tapete azul royal',c:70.81,cat:'tapetes'},
+  // ── bolos fake ──
+  {n:'Bolo fake Guerreiras K-pop',c:74.50,cat:'bolos'},
+  {n:'Bolo fake Safari Baby',c:64.90,cat:'bolos'},
 ];
+const ACERVO_VER=3;
 let EXTRAS_ACERVO=jparse(LS.get('gm_acervo_extra'),[]);
 if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
 
@@ -853,31 +895,78 @@ if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
 const limpaAcervo=a=>Array.isArray(a)?a.filter(x=>x&&typeof x.n==='string'&&x.n.trim()&&isFinite(x.c)):null;
 let ACERVO=limpaAcervo(jparse(LS.get('gm_acervo'),null));
 const semear=()=>ITENS_BASE.map(it=>({n:it.n,c:+it.c,cat:it.cat,b:it.n}));
+const deFabrica=n=>ITENS_BASE.some(b=>b.n===n);
+/* renomeações de fábrica entre versões */
+const REN={
+  // v0/v1 → v2
+  'Painel / Estante de fundo':'Estante','Painel romano':'Estante','Mini cavaletes (4)':'Mini cavalete',
+  // v2 → v3 (nomes finais, do jeito que o cliente vê)
+  'Painel ripado':'Painel romano ripado',
+  'Cilindro ripado':'Trio de cilindro ripado',
+  'Cômoda fake + tinta':'Cômoda fake branca',
+  'Kit boleira espelho':'Kit boleiras espelhadas',
+  'Boleiras bambu (5)':'Kit boleiras bambu (5)',
+  'Boleiras cristal':'Kit boleiras cristal',
+  'Boleiras patrulha canina':'Kit boleiras Patrulha Canina',
+  'Bandejas oval (2)':'Kit 2 bandejas ovais bambu',
+  'Mesinhas bege (2)':'Kit 2 mesinhas de mesa bege',
+  'Kit 2 mesinha azul bb':'Kit 2 mesinhas de mesa azul bebê',
+  'Vasos grande bege (2)':'Vasos grandes bege (2)',
+  'Vasos grande candy (2)':'Vasos grandes candy (2)',
+  'Kit 2 arbusto artificial pequeno':'Kit 2 arbustos artificiais pequenos',
+  'Tecido arco / forração':'Tecido de linho',
+  'Capas cilindro + painel redondo safari baby':'Capas cilindro + painel redondo Safari Baby',
+  'Capas cilindro + painel redondo patrulha':'Capas cilindro + painel redondo Patrulha Canina',
+  'Capas Guerreiras K-pop':'Capas cilindro + painel redondo Guerreiras K-pop',
+  'Capas branca painel romano + cilindro':'Capas cilindro + painel redondo branca',
+  'Capa painel romano jardim encantado':'Capas cilindro + painel romano Jardim Encantado',
+  'Capas Dino Baby':'Capas cilindro + painel redondo Dino Baby',
+  'Capa painel romano rosa bb + azul bb':'Capa painel romano rosa bebê + azul bebê',
+  'Número MDF + tinta':'Número MDF',
+  'Display borboleta de chão MDF + tinta':'Display de chão borboletas rosa',
+  'Displays de mesa safari baby':'Display de mesa Safari Baby',
+  'Display mesa Dino Baby':'Display de mesa Dino Baby',
+  'Display mesa Guerreiras K-pop':'Display de mesa Guerreiras K-pop',
+  'Display de mesa patrulha canina':'Display de mesa Patrulha Canina',
+  'Display chão Dino Baby':'Display de chão Dino Baby',
+  'Kit display flores, borboleta e coração':'Kit display de mesa flores, borboleta e coração',
+  'Bolo fake safari':'Bolo fake Safari Baby',
+  'Cubo baby':'Cubo Baby',
+};
+/* saíram do acervo: estantes e caixas são de armazenagem, balões entram por evento,
+   e a bandeja lilás/laranja virou dois kits separados */
+const REMOVIDOS=['Estante','Estante (2ª)','Balões (lote)','Capas de cilindro','Capas cilindro azul bb',
+  'Bandeja lilás e laranja','Caixa organizadora 3'];
+
 if(!ACERVO){
-  // b = nome de fábrica (marca os itens originais, mesmo depois de renomeados)
   ACERVO=semear().concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c,cat:CAT_PADRAO})));
   LS.set('gm_acervo',JSON.stringify(ACERVO));
-}else if(ACERVO.some(it=>!it.cat)){
-  // migração: acervo salvo antes das categorias
-  const REN={'Painel / Estante de fundo':'Painel romano'};   // renomeações de fábrica
-  const porNome={}; ITENS_BASE.forEach(b=>porNome[b.n]=b.cat);
+  LS.set('gm_acervo_ver',String(ACERVO_VER));
+}else if((+LS.get('gm_acervo_ver')||1) < ACERVO_VER){
+  // atualiza o acervo mantendo o que você criou e o que já editou
   const jaTem=n=>ACERVO.some(x=>x.n===n);
   ACERVO.forEach(it=>{
-    if(it.cat) return;
-    const novo=REN[it.n];
-    if(novo && !jaTem(novo)){ it.b=it.b||it.n; it.n=novo; }
-    it.cat=porNome[it.n]||CAT_PADRAO;
+    const novoNome=REN[it.b||it.n]||REN[it.n];
+    if(novoNome && !jaTem(novoNome)){ it.b=it.b||it.n; it.n=novoNome; }
+    // itens de fábrica seguem a categoria de fábrica (ela pode ter mudado de versão)
+    const f=ITENS_BASE.find(b=>b.n===it.n||b.n===it.b);
+    if(f) it.cat=f.cat;
+    else if(!it.cat) it.cat=CAT_PADRAO;
   });
+  // tira os que saíram do acervo e os provisórios em R$0 que nunca foram preenchidos
+  ACERVO=ACERVO.filter(it=>!REMOVIDOS.includes(it.n) && !REMOVIDOS.includes(it.b));
+  ACERVO=ACERVO.filter(it=>!(it.b && !deFabrica(it.n) && !(it.c>0)));
   // acrescenta os itens de fábrica que ainda não existem
-  ITENS_BASE.forEach(b=>{ if(!ACERVO.some(x=>x.n===b.n||x.b===b.n)) ACERVO.push({n:b.n,c:+b.c,cat:b.cat,b:b.n}); });
+  ITENS_BASE.forEach(b=>{ if(!ACERVO.some(x=>x.n===b.n)) ACERVO.push({n:b.n,c:+b.c,cat:b.cat,b:b.n}); });
   LS.set('gm_acervo',JSON.stringify(ACERVO));
-  // atualiza kits salvos que usavam o nome antigo
+  LS.set('gm_acervo_ver',String(ACERVO_VER));
+  // kits salvos acompanham as renomeações
   const kitsSalvos=jparse(LS.get('gm_kits'),null);
   if(kitsSalvos&&typeof kitsSalvos==='object'){
     let mud=false;
     for(const k in kitsSalvos) if(Array.isArray(kitsSalvos[k])){
       const antes=kitsSalvos[k].join('|');
-      kitsSalvos[k]=kitsSalvos[k].map(n=>REN[n]||n);
+      kitsSalvos[k]=kitsSalvos[k].map(n=>REN[n]||n).filter(n=>ACERVO.some(x=>x.n===n));
       if(kitsSalvos[k].join('|')!==antes) mud=true;
     }
     if(mud) LS.set('gm_kits',JSON.stringify(kitsSalvos));
@@ -895,9 +984,9 @@ function restaurarAcervoPadrao(){
 }
 
 const DEFAULT_KITS={
-  bronze:['Painel romano','Boleiras bambu (5)','Tecido arco / forração'],
-  prata:['Painel romano','Kit boleira espelho','Boleiras bambu (5)','Tecido arco / forração','Bandeja bambu quadrada','Mini cavaletes (4)','Capas de cilindro'],
-  ouro:ITENS_BASE.filter(it=>it.cat!=='materiais'&&it.c>0).map(it=>it.n),
+  bronze:['Estante','Boleiras bambu (5)','Tecido arco / forração','Base chão balão'],
+  prata:['Estante','Trio de cilindro','Kit boleira espelho','Boleiras bambu (5)','Tecido arco / forração','Bandeja bambu quadrada','Mini cavalete','Base chão balão'],
+  ouro:['Estante','Painel ripado','Trio de cilindro','Kit boleira espelho','Boleiras bambu (5)','Tecido arco / forração','Bandeja bambu quadrada','Bandeja bambu comprida','Bandeja bambu redonda','Mini cavalete','Mosquitinho','Base chão balão','Kit 2 arbusto artificial pequeno'],
 };
 let KITS=jparse(LS.get('gm_kits'),null);
 if(KITS&&typeof KITS!=='object')KITS=null;
@@ -917,6 +1006,8 @@ const pctEl=$o('pct');
 const list=$o('list');
 
 let editando=null;   // nome do item em modo de edição
+let abertas=new Set(jparse(LS.get('gm_cats_abertas'),[]));   // categorias expandidas
+function salvarAbertas(){ LS.set('gm_cats_abertas',JSON.stringify([...abertas])); }
 
 function renomearNosKits(antigo,novo){
   let mudou=false;
@@ -947,14 +1038,21 @@ function build(){
   if(orfaos.length) grupos.push({cat:{id:CAT_PADRAO,nome:'Outros'}, itens:orfaos});
 
   grupos.forEach(g=>{
-    const cab=document.createElement('li');
-    cab.className='cat-cab'+(g.cat.oculta?' oculta':'');
     const marcados=g.itens.filter(it=>checked.has(it.n)).length;
-    cab.innerHTML=`<span class="cat-nome">${g.cat.nome}</span>
+    const editandoAqui=g.itens.some(it=>it.n===editando);
+    const aberta=abertas.has(g.cat.id)||editandoAqui;   // com item em edição, mantém aberta
+    const cab=document.createElement('li');
+    cab.className='cat-cab'+(g.cat.oculta?' oculta':'')+(aberta?' aberta':'');
+    cab.innerHTML=`<span class="cat-seta">${aberta?'▾':'▸'}</span>
+      <span class="cat-nome">${g.cat.nome}</span>
       ${g.cat.oculta?'<span class="cat-tag">não aparece p/ o cliente</span>':''}
-      <span class="cat-cont">${marcados}/${g.itens.length}</span>`;
+      <span class="cat-cont${marcados?' tem':''}">${marcados?marcados+'/':''}${g.itens.length}</span>`;
+    cab.onclick=()=>{
+      if(abertas.has(g.cat.id)) abertas.delete(g.cat.id); else abertas.add(g.cat.id);
+      salvarAbertas(); build();
+    };
     list.appendChild(cab);
-    g.itens.forEach(it=>montarItem(it,p));
+    if(aberta) g.itens.forEach(it=>montarItem(it,p));
   });
 }
 function montarItem(it,p){
@@ -1006,7 +1104,7 @@ function montarItem(it,p){
       <button class="ed" title="Editar nome e valor">✎</button>
       <button class="rm" title="Remover do acervo">×</button>`;
     li.onclick=()=>{checked.has(it.n)?checked.delete(it.n):checked.add(it.n);kitAtual=null;syncKitBtns();build();total();};
-    li.querySelector('.ed').onclick=ev=>{ev.stopPropagation();editando=it.n;build();};
+    li.querySelector('.ed').onclick=ev=>{ev.stopPropagation();editando=it.n;abertas.add(it.cat||CAT_PADRAO);salvarAbertas();build();};
     li.querySelector('.rm').onclick=ev=>{
       ev.stopPropagation();
       if(!confirm('Remover "'+it.n+'" do acervo?')) return;
@@ -1031,20 +1129,8 @@ function total(){
 function syncKitBtns(){
   ROOT.querySelectorAll('.kit').forEach(b=>b.classList.toggle('on', b.dataset.kit===kitAtual));
 }
-ROOT.querySelectorAll('.kit').forEach(b=>b.onclick=()=>{
-  const k=b.dataset.kit;
-  if(k==='clear'){checked.clear();kitAtual=null;}
-  else{checked=new Set((KITS[k]||[]).filter(n=>itemPorNome(n)));kitAtual=k;}
-  syncKitBtns();build();total();
-});
-$o('saveToggle').onclick=()=>$o('saveRow').classList.toggle('show');
-ROOT.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{
-  KITS[b.dataset.save]=[...checked];
-  LS.set('gm_kits',JSON.stringify(KITS));
-  b.textContent='✓ salvo';setTimeout(()=>resetSaveBtns(),900);
-});
-function resetSaveBtns(){ROOT.querySelectorAll('[data-save]').forEach(b=>{
-  b.textContent='Salvar → '+b.dataset.save.charAt(0).toUpperCase()+b.dataset.save.slice(1);});}
+const btLimpar=$o('bt-limpar');
+if(btLimpar) btLimpar.onclick=()=>{checked.clear();kitAtual=null;build();total();};
 
 // adicionar item novo ao acervo
 $o('novo-add').onclick=()=>{
@@ -1056,8 +1142,10 @@ $o('novo-add').onclick=()=>{
   if(!(val>0)){vEl.classList.add('erro');ok=false;setTimeout(()=>vEl.classList.remove('erro'),1200);}
   if(!ok) return;
   const catEl=$o('novo-cat');
-  ACERVO.push({n:nome,c:Math.round(val*100)/100,cat:(catEl&&catEl.value)||CAT_PADRAO});
+  const catNova=(catEl&&catEl.value)||CAT_PADRAO;
+  ACERVO.push({n:nome,c:Math.round(val*100)/100,cat:catNova});
   salvarAcervo();
+  abertas.add(catNova); salvarAbertas();   // abre a categoria para você ver o item entrando
   checked.add(nome);
   nEl.value='';vEl.value='';
   build();total();
