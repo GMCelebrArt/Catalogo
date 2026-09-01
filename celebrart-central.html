@@ -95,6 +95,14 @@ body{background:#faf6f2;min-height:100vh}
 #aba-orcamento li.item.editando .ed-ok{background:#dff1e4;color:#2f7a45}
 #aba-orcamento li.item.editando .ed-cancel{background:#f6e9ec;color:#a05563}
 #aba-orcamento li.item.editando input.erro{border-color:#d9534f;background:#fdf1f1}
+#aba-orcamento li.item.editando .ed-cat{flex:1 1 100%;order:3;border:1px solid #e6d3d8;border-radius:7px;padding:7px 8px;font:inherit;font-size:.8rem;background:#fff;margin-top:6px}
+#aba-orcamento li.item.editando{flex-wrap:wrap}
+#aba-orcamento li.cat-cab{display:flex;align-items:center;gap:8px;padding:14px 4px 6px;border-bottom:none;cursor:default;list-style:none}
+#aba-orcamento li.cat-cab:first-child{padding-top:4px}
+#aba-orcamento li.cat-cab .cat-nome{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:#c9607c;letter-spacing:.02em}
+#aba-orcamento li.cat-cab .cat-tag{font-size:.63rem;color:#9c8a8f;background:#f6eef0;border-radius:20px;padding:2px 8px;white-space:nowrap}
+#aba-orcamento li.cat-cab .cat-cont{margin-left:auto;font-size:.7rem;color:#b09aa0}
+#aba-orcamento li.cat-cab.oculta .cat-nome{color:#7d8aa8}
 
 /* ═══ ABA PROPOSTA (escopo #aba-proposta) ═══ */
 #aba-proposta{
@@ -272,6 +280,9 @@ body{background:#faf6f2;min-height:100vh}
     <input type="text" class="an" id="novo-nome" placeholder="Novo item (ex.: Cesto de flores)" maxlength="42">
     <input type="number" class="av" id="novo-valor" placeholder="R$" min="0" step="0.01" inputmode="decimal">
     <button id="novo-add" title="Adicionar ao acervo">+</button>
+  </div>
+  <div class="addrow" style="margin-top:6px">
+    <select id="novo-cat" style="flex:1 1 auto"></select>
   </div>
   <div class="pct" style="margin-top:12px;border-top:1px solid #f3e8ea;padding-top:12px">
     <span style="font-size:13px;color:#8a6b70">Cobrar</span>
@@ -782,21 +793,57 @@ const LS={
   set(k,v){try{localStorage.setItem(k,v)}catch(_){}}
 };
 function jparse(s,fb){try{const v=JSON.parse(s);return v==null?fb:v}catch(_){return fb}}
+/* categorias — 'materiais' entra no preço mas NÃO aparece na descrição do cliente */
+const CATS=[
+  {id:'materiais', nome:'Materiais de uso e consumo', oculta:true},
+  {id:'paineis',   nome:'Painéis'},
+  {id:'cilindros', nome:'Cilindros'},
+  {id:'bandejas',  nome:'Boleiras e bandejas'},
+  {id:'capas',     nome:'Capas e tecidos'},
+  {id:'displays',  nome:'Displays'},
+  {id:'decoracao', nome:'Decoração'},
+];
+const CAT_PADRAO='decoracao';
+const catOculta=id=>{const c=CATS.find(x=>x.id===id);return !!(c&&c.oculta);};
+
 const ITENS_BASE=[
-  {n:'Painel / Estante de fundo',c:209.90},
-  {n:'Kit boleira espelho',c:174.00},
-  {n:'Boleiras bambu (5)',c:91.22},
-  {n:'Tecido arco / forração',c:89.70},
-  {n:'Máquina de balão',c:66.36},
-  {n:'Bandeja bambu quadrada',c:48.99},
-  {n:'Bandeja bambu comprida',c:41.61},
-  {n:'Mini cavaletes (4)',c:39.97},
-  {n:'Mosquitinho',c:39.00},
-  {n:'Capas de cilindro',c:36.86},
-  {n:'Presilhas',c:25.25},
-  {n:'Base chão balão',c:24.90},
-  {n:'Bandeja bambu redonda',c:22.18},
-  {n:'Elástico amarelo',c:10.90},
+  // materiais (não aparecem para o cliente)
+  {n:'Máquina de balão',c:66.36,cat:'materiais'},
+  {n:'Presilhas',c:25.25,cat:'materiais'},
+  {n:'Elástico amarelo',c:10.90,cat:'materiais'},
+  {n:'Spray de balão',c:0,cat:'materiais'},
+  // painéis
+  {n:'Painel romano',c:209.90,cat:'paineis'},
+  {n:'Painel redondo',c:0,cat:'paineis'},
+  {n:'Painel romano ripado',c:0,cat:'paineis'},
+  // cilindros
+  {n:'Cilindro',c:0,cat:'cilindros'},
+  {n:'Cilindro ripado',c:0,cat:'cilindros'},
+  // boleiras e bandejas
+  {n:'Kit boleira espelho',c:174.00,cat:'bandejas'},
+  {n:'Boleiras bambu (5)',c:91.22,cat:'bandejas'},
+  {n:'Bandeja bambu quadrada',c:48.99,cat:'bandejas'},
+  {n:'Bandeja bambu comprida',c:41.61,cat:'bandejas'},
+  {n:'Bandeja bambu redonda',c:22.18,cat:'bandejas'},
+  // capas e tecidos
+  {n:'Tecido arco / forração',c:89.70,cat:'capas'},
+  {n:'Capas de cilindro',c:36.86,cat:'capas'},
+  {n:'Capa painel romano',c:0,cat:'capas'},
+  {n:'Capa painel romano ripado',c:0,cat:'capas'},
+  {n:'Capa painel redondo',c:0,cat:'capas'},
+  // displays
+  {n:'Display de mesa',c:0,cat:'displays'},
+  {n:'Display de chão',c:0,cat:'displays'},
+  {n:'Display Divino Espírito Santo',c:0,cat:'displays'},
+  // decoração
+  {n:'Vaso grande',c:0,cat:'decoracao'},
+  {n:'Mini cavaletes (4)',c:39.97,cat:'decoracao'},
+  {n:'Mosquitinho',c:39.00,cat:'decoracao'},
+  {n:'Base chão balão',c:24.90,cat:'decoracao'},
+  {n:'Tapete de crochê',c:0,cat:'decoracao'},
+  {n:'Tapete do tema',c:0,cat:'decoracao'},
+  {n:'Anjos decorativos (2)',c:0,cat:'decoracao'},
+  {n:'Arranjo de flores',c:0,cat:'decoracao'},
 ];
 let EXTRAS_ACERVO=jparse(LS.get('gm_acervo_extra'),[]);
 if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
@@ -805,11 +852,36 @@ if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
    A partir daqui tudo (nome, valor, remoção) é livre e fica salvo. */
 const limpaAcervo=a=>Array.isArray(a)?a.filter(x=>x&&typeof x.n==='string'&&x.n.trim()&&isFinite(x.c)):null;
 let ACERVO=limpaAcervo(jparse(LS.get('gm_acervo'),null));
+const semear=()=>ITENS_BASE.map(it=>({n:it.n,c:+it.c,cat:it.cat,b:it.n}));
 if(!ACERVO){
   // b = nome de fábrica (marca os itens originais, mesmo depois de renomeados)
-  ACERVO=ITENS_BASE.map(it=>({n:it.n,c:+it.c,b:it.n}))
-          .concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c})));
+  ACERVO=semear().concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c,cat:CAT_PADRAO})));
   LS.set('gm_acervo',JSON.stringify(ACERVO));
+}else if(ACERVO.some(it=>!it.cat)){
+  // migração: acervo salvo antes das categorias
+  const REN={'Painel / Estante de fundo':'Painel romano'};   // renomeações de fábrica
+  const porNome={}; ITENS_BASE.forEach(b=>porNome[b.n]=b.cat);
+  const jaTem=n=>ACERVO.some(x=>x.n===n);
+  ACERVO.forEach(it=>{
+    if(it.cat) return;
+    const novo=REN[it.n];
+    if(novo && !jaTem(novo)){ it.b=it.b||it.n; it.n=novo; }
+    it.cat=porNome[it.n]||CAT_PADRAO;
+  });
+  // acrescenta os itens de fábrica que ainda não existem
+  ITENS_BASE.forEach(b=>{ if(!ACERVO.some(x=>x.n===b.n||x.b===b.n)) ACERVO.push({n:b.n,c:+b.c,cat:b.cat,b:b.n}); });
+  LS.set('gm_acervo',JSON.stringify(ACERVO));
+  // atualiza kits salvos que usavam o nome antigo
+  const kitsSalvos=jparse(LS.get('gm_kits'),null);
+  if(kitsSalvos&&typeof kitsSalvos==='object'){
+    let mud=false;
+    for(const k in kitsSalvos) if(Array.isArray(kitsSalvos[k])){
+      const antes=kitsSalvos[k].join('|');
+      kitsSalvos[k]=kitsSalvos[k].map(n=>REN[n]||n);
+      if(kitsSalvos[k].join('|')!==antes) mud=true;
+    }
+    if(mud) LS.set('gm_kits',JSON.stringify(kitsSalvos));
+  }
 }
 function salvarAcervo(){ LS.set('gm_acervo',JSON.stringify(ACERVO)); }
 function acervo(){ return ACERVO; }
@@ -818,14 +890,14 @@ function itemPorNome(n){ return ACERVO.find(it=>it.n===n); }
 function restaurarAcervoPadrao(){
   // mantém só os itens que você criou (sem marca de fábrica) e ressemeia os originais
   const meus=ACERVO.filter(it=>!it.b && !ITENS_BASE.some(b=>b.n===it.n));
-  ACERVO=ITENS_BASE.map(it=>({n:it.n,c:+it.c,b:it.n})).concat(meus);
+  ACERVO=semear().concat(meus);
   salvarAcervo();
 }
 
 const DEFAULT_KITS={
-  bronze:['Painel / Estante de fundo','Boleiras bambu (5)','Tecido arco / forração'],
-  prata:['Painel / Estante de fundo','Kit boleira espelho','Boleiras bambu (5)','Tecido arco / forração','Bandeja bambu quadrada','Mini cavaletes (4)','Capas de cilindro'],
-  ouro:ITENS_BASE.map(it=>it.n),
+  bronze:['Painel romano','Boleiras bambu (5)','Tecido arco / forração'],
+  prata:['Painel romano','Kit boleira espelho','Boleiras bambu (5)','Tecido arco / forração','Bandeja bambu quadrada','Mini cavaletes (4)','Capas de cilindro'],
+  ouro:ITENS_BASE.filter(it=>it.cat!=='materiais'&&it.c>0).map(it=>it.n),
 };
 let KITS=jparse(LS.get('gm_kits'),null);
 if(KITS&&typeof KITS!=='object')KITS=null;
@@ -868,13 +940,32 @@ function removerDosKits(nome){
 function build(){
   list.innerHTML='';
   const p=+pctEl.value/100;
-  acervo().forEach(it=>{
+  // agrupa por categoria, na ordem de CATS
+  const grupos=CATS.map(c=>({cat:c, itens:acervo().filter(it=>(it.cat||CAT_PADRAO)===c.id)}))
+                   .filter(g=>g.itens.length);
+  const orfaos=acervo().filter(it=>!CATS.some(c=>c.id===(it.cat||CAT_PADRAO)));
+  if(orfaos.length) grupos.push({cat:{id:CAT_PADRAO,nome:'Outros'}, itens:orfaos});
+
+  grupos.forEach(g=>{
+    const cab=document.createElement('li');
+    cab.className='cat-cab'+(g.cat.oculta?' oculta':'');
+    const marcados=g.itens.filter(it=>checked.has(it.n)).length;
+    cab.innerHTML=`<span class="cat-nome">${g.cat.nome}</span>
+      ${g.cat.oculta?'<span class="cat-tag">não aparece p/ o cliente</span>':''}
+      <span class="cat-cont">${marcados}/${g.itens.length}</span>`;
+    list.appendChild(cab);
+    g.itens.forEach(it=>montarItem(it,p));
+  });
+}
+function montarItem(it,p){
+  {
     const li=document.createElement('li');
 
     if(editando===it.n){                      // ---- modo edição ----
       li.className='item editando';
       li.innerHTML=`<input type="text" class="ed-nome" value="${it.n.replace(/"/g,'&quot;')}" maxlength="42">
         <input type="number" class="ed-valor" value="${it.c}" min="0" step="0.01" inputmode="decimal">
+        <select class="ed-cat">${CATS.map(c=>`<option value="${c.id}"${(it.cat||CAT_PADRAO)===c.id?' selected':''}>${c.nome}</option>`).join('')}</select>
         <button class="ed-ok" title="Salvar">✓</button>
         <button class="ed-cancel" title="Cancelar">✕</button>`;
       const nEl=li.querySelector('.ed-nome'), vEl=li.querySelector('.ed-valor');
@@ -892,6 +983,8 @@ function build(){
           if(checked.has(antigo)){checked.delete(antigo);checked.add(novoNome);}
         }
         it.n=novoNome; it.c=Math.round(novoVal*100)/100;   // it.b (marca de fábrica) é preservada
+        const selCat=li.querySelector('.ed-cat');
+        if(selCat) it.cat=selCat.value;
         salvarAcervo();
         fechar();
       };
@@ -924,7 +1017,7 @@ function build(){
       build();total();
     };
     list.appendChild(li);
-  });
+  }
 }
 function total(){
   const p=+pctEl.value/100;
@@ -962,7 +1055,8 @@ $o('novo-add').onclick=()=>{
   if(!nome || itemPorNome(nome)){nEl.classList.add('erro');ok=false;setTimeout(()=>nEl.classList.remove('erro'),1200);}
   if(!(val>0)){vEl.classList.add('erro');ok=false;setTimeout(()=>vEl.classList.remove('erro'),1200);}
   if(!ok) return;
-  ACERVO.push({n:nome,c:Math.round(val*100)/100});
+  const catEl=$o('novo-cat');
+  ACERVO.push({n:nome,c:Math.round(val*100)/100,cat:(catEl&&catEl.value)||CAT_PADRAO});
   salvarAcervo();
   checked.add(nome);
   nEl.value='';vEl.value='';
@@ -970,6 +1064,12 @@ $o('novo-add').onclick=()=>{
 };
 $o('novo-valor').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$o('novo-add').onclick();}});
 $o('novo-nome').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$o('novo-valor').focus();}});
+
+// opções de categoria no formulário de novo item
+(function(){
+  const sel=$o('novo-cat'); if(!sel) return;
+  sel.innerHTML=CATS.map(c=>`<option value="${c.id}"${c.id===CAT_PADRAO?' selected':''}>${c.nome}</option>`).join('');
+})();
 
 const btRest=$o('restaurar-acervo');
 if(btRest) btRest.onclick=ev=>{
@@ -984,7 +1084,11 @@ if(btRest) btRest.onclick=ev=>{
 
 $o('copy').onclick=()=>{
   const p=+pctEl.value/100;let linhas=[];let t=0;
-  acervo().forEach(it=>{if(checked.has(it.n)){linhas.push('• '+it.n);t+=it.c*p;}});
+  acervo().forEach(it=>{
+    if(!checked.has(it.n)) return;
+    t+=it.c*p;                                   // materiais entram no preço…
+    if(!catOculta(it.cat||CAT_PADRAO)) linhas.push('• '+it.n);   // …mas não na descrição
+  });
   const ad=+$o('adesivo').value||0;
   const ar=+$o('arco').value||0;
   const mo=+$o('montagem').value||0;
@@ -1004,7 +1108,11 @@ $o('copy').onclick=()=>{
 function dados(){
   const p=+pctEl.value/100;
   let aluguel=0;const nomes=[];
-  acervo().forEach(it=>{if(checked.has(it.n)){aluguel+=it.c*p;nomes.push(it.n);}});
+  acervo().forEach(it=>{
+    if(!checked.has(it.n)) return;
+    aluguel+=it.c*p;
+    if(!catOculta(it.cat||CAT_PADRAO)) nomes.push(it.n);
+  });
   const ad=+$o('adesivo').value||0;
   const ar=+$o('arco').value||0;
   const mo=+$o('montagem').value||0;
