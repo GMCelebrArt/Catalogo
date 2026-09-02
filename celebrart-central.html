@@ -106,6 +106,13 @@ body{background:#faf6f2;min-height:100vh}
 #aba-orcamento li.cat-cab .cat-nome{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:#c9607c;letter-spacing:.02em}
 #aba-orcamento li.cat-cab .cat-cont.tem{background:#c9607c;color:#fff;border-radius:20px;padding:1px 8px;font-size:.68rem}
 #aba-orcamento .acervo-topo{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#aba-orcamento .publicar{margin-top:14px;padding-top:12px;border-top:1px solid #f3e8ea;display:flex;flex-direction:column;gap:6px}
+#aba-orcamento #bt-exportar{padding:11px 14px;border:none;border-radius:10px;background:#c9607c;color:#fff;font:inherit;font-size:.85rem;cursor:pointer}
+#aba-orcamento #bt-exportar:disabled{opacity:.6}
+#aba-orcamento .orc-aviso{display:none;margin-top:10px;padding:10px 12px;border-radius:9px;font-size:.78rem;line-height:1.35}
+#aba-orcamento .orc-aviso.on{display:block}
+#aba-orcamento .orc-aviso.erro{background:#fdf1f1;border:1px solid #f0c9c9;color:#a33}
+#aba-orcamento .orc-aviso.ok{background:#eef7f0;border:1px solid #c9e6d2;color:#2f7a45}
 #aba-orcamento #bt-limpar{flex:0 0 auto;padding:6px 12px;font-size:.72rem;border:1px solid #eddfe3;background:#fff;color:#a05563;border-radius:20px;cursor:pointer}
 #aba-orcamento li.cat-cab .cat-tag{font-size:.63rem;color:#9c8a8f;background:#f6eef0;border-radius:20px;padding:2px 8px;white-space:nowrap}
 #aba-orcamento li.cat-cab .cat-cont{margin-left:auto;font-size:.7rem;color:#b09aa0}
@@ -280,11 +287,16 @@ body{background:#faf6f2;min-height:100vh}
   </div>
   <div class="pct" style="margin-top:12px;border-top:1px solid #f3e8ea;padding-top:12px">
     <span style="font-size:13px;color:#8a6b70">Cobrar</span>
-    <input type="number" id="pct" value="30" min="0" max="100">
+    <input type="number" id="pct" value="20" min="0" max="100">
     <span style="font-size:13px;color:#8a6b70">% do valor de compra</span>
   </div>
   <p class="hint" style="text-align:left;margin-top:10px">Toque em ✎ para mudar nome e valor de compra, ou em × para remover.
     <a href="#" id="restaurar-acervo" style="color:#c9607c">Restaurar lista original</a></p>
+  <div id="orc-aviso" class="orc-aviso"></div>
+  <div class="publicar">
+    <button id="bt-exportar">⬇ Baixar arquivo com esta lista</button>
+    <span class="hint">Gera o arquivo já com o seu acervo. Suba no GitHub para que todos os aparelhos abram com esta lista.</span>
+  </div>
 </div>
 
 <div class="card">
@@ -782,9 +794,25 @@ const LOGO_B64 = "UklGRsKiAABXRUJQVlA4WAoAAAAQAAAA7wAAPwEAQUxQSHdxAAAB/yckSPD/eG
 
 (function(){
 const ROOT = document.getElementById('aba-orcamento');
+let avisoFalha=false;
+function avisoOrc(msg,tipo){
+  const el=document.getElementById('orc-aviso'); if(!el) return;
+  if(!msg){ el.className='orc-aviso'; el.textContent=''; return; }
+  el.className='orc-aviso on '+(tipo||'ok'); el.textContent=msg;
+}
 const LS={
   get(k){try{return localStorage.getItem(k)}catch(_){return null}},
-  set(k,v){try{localStorage.setItem(k,v)}catch(_){}}
+  set(k,v){
+    try{ localStorage.setItem(k,v); return true; }
+    catch(e){
+      if(!avisoFalha){
+        avisoFalha=true;
+        avisoOrc('Não consegui salvar no navegador — as alterações valem só até fechar a página. '
+          +'Baixe o arquivo com esta lista e suba no GitHub para não perder.','erro');
+      }
+      return false;
+    }
+  }
 };
 function jparse(s,fb){try{const v=JSON.parse(s);return v==null?fb:v}catch(_){return fb}}
 /* categorias — 'materiais' entra no preço mas NÃO aparece na descrição do cliente */
@@ -804,16 +832,16 @@ const CATS=[
 const CAT_PADRAO='decoracao';
 const catOculta=id=>{const c=CATS.find(x=>x.id===id);return !!(c&&c.oculta);};
 
+/*ACERVO-INI*/
 const ITENS_BASE=[
   // ── materiais de uso e consumo (não aparecem para o cliente) ──
-  {n:'Máquina de balão',c:66.36,cat:'materiais'},
   {n:'Spray de balão',c:60.00,cat:'materiais'},
   {n:'Presilhas',c:25.25,cat:'materiais'},
   {n:'Elástico amarelo',c:10.90,cat:'materiais'},
   // ── painéis ──
   {n:'Painel romano ripado',c:184.20,cat:'paineis'},
-  {n:'Arco romano',c:125.00,cat:'paineis'},
-  {n:'Arco redondo',c:125.00,cat:'paineis'},
+  {n:'Painel romano metálico',c:125.00,cat:'paineis'},
+  {n:'Painel redondo metálico',c:125.00,cat:'paineis'},
   // ── mesas e estantes ──
   {n:'Mesas treliças',c:253.01,cat:'mesas'},
   {n:'Cômoda fake amarela',c:180.00,cat:'mesas'},
@@ -841,6 +869,7 @@ const ITENS_BASE=[
   {n:'Kit 2 bandejas laranja',c:24.76,cat:'bandejas'},
   {n:'Bandeja bambu redonda',c:22.18,cat:'bandejas'},
   {n:'Vasos grandes candy (2)',c:21.53,cat:'bandejas'},
+  {n:'Vasos de cristal (2)',c:29.70,cat:'bandejas'},
   // ── capas e tecidos ──
   {n:'Capas cilindro + painel redondo Safari Baby',c:119.51,cat:'capas'},
   {n:'Capas cilindro + painel redondo Patrulha Canina',c:108.72,cat:'capas'},
@@ -850,10 +879,12 @@ const ITENS_BASE=[
   {n:'Capas cilindro + painel romano Jardim Encantado',c:79.83,cat:'capas'},
   {n:'Capas cilindro + painel redondo Dino Baby',c:76.99,cat:'capas'},
   {n:'Capa bege e marrom painel romano',c:66.59,cat:'capas'},
-  {n:'Capa painel romano rosa bebê + azul bebê',c:52.87,cat:'capas'},
+  {n:'Capa painel romano azul bebê',c:52.87,cat:'capas'},
+  {n:'Capa painel romano rosa bebê',c:52.87,cat:'capas'},
   {n:'Capa cilindro rosa',c:42.98,cat:'capas'},
   // ── displays ──
   {n:'Número MDF',c:230.00,cat:'displays'},
+  {n:'Placa Divino Espírito Santo',c:165.00,cat:'displays'},
   {n:'Display de mesa Safari Baby',c:83.98,cat:'displays'},
   {n:'Kit display de mesa flores, borboleta e coração',c:82.73,cat:'displays'},
   {n:'Display de chão borboletas rosa',c:60.00,cat:'displays'},
@@ -863,6 +894,7 @@ const ITENS_BASE=[
   {n:'Display de chão Dino Baby',c:0,cat:'displays'},
   // ── flores ──
   {n:'Buquês crisântemo & botão (2)',c:113.92,cat:'flores'},
+  {n:'Buquê crisântemos e botões rosa e branco',c:48.00,cat:'flores'},
   {n:'Flor artificial branco e rosa',c:43.09,cat:'flores'},
   {n:'Mosquitinho',c:39.00,cat:'flores'},
   {n:'Kit 2 arbustos artificiais pequenos',c:23.60,cat:'flores'},
@@ -873,6 +905,9 @@ const ITENS_BASE=[
   {n:'Escadinha lembrancinha branca',c:46.82,cat:'decoracao'},
   {n:'Escadinha lembrancinha bege',c:46.82,cat:'decoracao'},
   {n:'Vaso de chão bege grande',c:45.00,cat:'decoracao'},
+  {n:'Estátua de mesa anjo 10cm',c:25.00,cat:'decoracao'},
+  {n:'Estátua de mesa anjo ajoelhado 20cm',c:20.00,cat:'decoracao'},
+  {n:'Estátua de mesa anjo 14cm',c:15.00,cat:'decoracao'},
   {n:'Urso pequeno',c:42.41,cat:'decoracao'},
   {n:'Mini cavalete',c:39.97,cat:'decoracao'},
   {n:'Base chão balão',c:24.90,cat:'decoracao'},
@@ -886,7 +921,8 @@ const ITENS_BASE=[
   {n:'Bolo fake Guerreiras K-pop',c:74.50,cat:'bolos'},
   {n:'Bolo fake Safari Baby',c:64.90,cat:'bolos'},
 ];
-const ACERVO_VER=3;
+/*ACERVO-FIM*/
+const ACERVO_VER=4;
 let EXTRAS_ACERVO=jparse(LS.get('gm_acervo_extra'),[]);
 if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
 
@@ -932,11 +968,15 @@ const REN={
   'Kit display flores, borboleta e coração':'Kit display de mesa flores, borboleta e coração',
   'Bolo fake safari':'Bolo fake Safari Baby',
   'Cubo baby':'Cubo Baby',
+  // v3 → v4
+  'Arco romano':'Painel romano metálico',
+  'Arco redondo':'Painel redondo metálico',
 };
 /* saíram do acervo: estantes e caixas são de armazenagem, balões entram por evento,
    e a bandeja lilás/laranja virou dois kits separados */
 const REMOVIDOS=['Estante','Estante (2ª)','Balões (lote)','Capas de cilindro','Capas cilindro azul bb',
-  'Bandeja lilás e laranja','Caixa organizadora 3'];
+  'Bandeja lilás e laranja','Caixa organizadora 3','Máquina de balão',
+  'Capa painel romano rosa bebê + azul bebê'];
 
 if(!ACERVO){
   ACERVO=semear().concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c,cat:CAT_PADRAO})));
@@ -1158,6 +1198,55 @@ $o('novo-nome').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefa
   const sel=$o('novo-cat'); if(!sel) return;
   sel.innerHTML=CATS.map(c=>`<option value="${c.id}"${c.id===CAT_PADRAO?' selected':''}>${c.nome}</option>`).join('');
 })();
+
+/* gera uma cópia deste arquivo já com o acervo atual como lista de fábrica */
+const btExp=$o('bt-exportar');
+if(btExp) btExp.onclick=async ()=>{
+  const original=btExp.textContent;
+  btExp.disabled=true; btExp.textContent='Gerando…'; avisoOrc('');
+  try{
+    const resp=await fetch(location.href.split('#')[0].split('?')[0],{cache:'no-store'});
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    let html=await resp.text();
+
+    const ini=html.indexOf('/*ACERVO-INI*/'), fim=html.indexOf('/*ACERVO-FIM*/');
+    if(ini<0||fim<0) throw new Error('marcadores não encontrados');
+
+    const txt=v=>String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const linhas=ACERVO.map(it=>
+      "  {n:'"+txt(it.n)+"',c:"+(Math.round((+it.c||0)*100)/100)+",cat:'"+txt(it.cat||CAT_PADRAO)+"'},"
+    ).join('\n');
+    const bloco="/*ACERVO-INI*/\nconst ITENS_BASE=[\n"+linhas+"\n];\n";
+    html=html.slice(0,ini)+bloco+html.slice(fim);
+
+    // sobe a versão para que os outros aparelhos peguem a lista nova
+    const mv=html.match(/const ACERVO_VER=(\d+);/);
+    if(mv) html=html.replace(mv[0],'const ACERVO_VER='+(+mv[1]+1)+';');
+    // a lista publicada já é a definitiva: nada a renomear ou remover
+    html=html.replace(/const REMOVIDOS=\[[\s\S]*?\];/,'const REMOVIDOS=[];');
+    // a porcentagem em uso vira o padrão do arquivo
+    const pctAtual=+pctEl.value||20;
+    html=html.replace(/<input type="number" id="pct" value="\d+"/,'<input type="number" id="pct" value="'+pctAtual+'"');
+
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const ehIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(/Mac/.test(navigator.platform||'')&&navigator.maxTouchPoints>1);
+    if(ehIOS){
+      const w=window.open(); if(w) w.location.href=url;
+      avisoOrc('Arquivo aberto em outra aba. No computador fica mais fácil de salvar e subir no GitHub.','ok');
+    }else{
+      const a=document.createElement('a');
+      a.href=url; a.download='celebrart-central.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      avisoOrc('Arquivo baixado com '+ACERVO.length+' itens. Agora é só substituir o do GitHub.','ok');
+    }
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+  }catch(err){
+    console.error(err);
+    avisoOrc('Não consegui gerar o arquivo. Isso só funciona pelo link do GitHub, não com o arquivo aberto direto do computador.','erro');
+  }
+  btExp.disabled=false; btExp.textContent=original;
+};
 
 const btRest=$o('restaurar-acervo');
 if(btRest) btRest.onclick=ev=>{
