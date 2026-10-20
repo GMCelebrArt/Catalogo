@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GM CelebrArt — Central Pegue e Monte</title>
+<title>GM CelebrArt — Central</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -106,6 +106,11 @@ body{background:#faf6f2;min-height:100vh}
 #aba-orcamento li.cat-cab .cat-nome{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:#c9607c;letter-spacing:.02em}
 #aba-orcamento li.cat-cab .cat-cont.tem{background:#c9607c;color:#fff;border-radius:20px;padding:1px 8px;font-size:.68rem}
 #aba-orcamento .acervo-topo{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#aba-contrato.mod-pm .so-mon{display:none!important}#aba-contrato.mod-montado .so-pm{display:none!important}
+#aba-proposta .sinal-linha{display:flex;gap:6px}#aba-proposta .sinal-linha input{flex:1;min-width:0}#aba-proposta .sinal-linha select{flex:0 0 64px}
+#aba-orcamento .mod-toggle{display:flex;gap:6px;margin:4px 0 10px;background:#f6eef0;border-radius:11px;padding:4px}
+#aba-orcamento .mod-toggle button{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:8px;font:inherit;font-size:.8rem;color:#8a6b70;cursor:pointer}
+#aba-orcamento .mod-toggle button.on{background:#fff;color:#c9607c;box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:500}
 #aba-orcamento .publicar{margin-top:14px;padding-top:12px;border-top:1px solid #f3e8ea;display:flex;flex-direction:column;gap:6px}
 #aba-orcamento #bt-exportar{padding:11px 14px;border:none;border-radius:10px;background:#c9607c;color:#fff;font:inherit;font-size:.85rem;cursor:pointer}
 #aba-orcamento #bt-exportar:disabled{opacity:.6}
@@ -301,11 +306,15 @@ body{background:#faf6f2;min-height:100vh}
 
 <div class="card">
   <span class="lbl">Por evento</span>
+  <div class="mod-toggle" id="orc-mod">
+    <button data-mod="montado" class="on">Decoração montada</button>
+    <button data-mod="pm">Pegue e Monte</button>
+  </div>
   <div class="row"><span>Adesivo personalizado (uso único)</span><input type="number" id="adesivo" placeholder="0,00"></div>
   <div class="row"><span>Arco de balões</span><input type="number" id="arco" placeholder="0,00"></div>
   <div class="row"><span>Montagem + retirada</span><input type="number" id="montagem" placeholder="0,00"></div>
   <div class="row"><span>Frete / deslocamento</span><input type="number" id="frete" placeholder="0,00"></div>
-  <p class="hint" style="text-align:left">Pegue e Monte: deixe montagem e frete em branco.</p>
+  <p class="hint" id="orc-mod-hint" style="text-align:left">Montagem, entrega e retirada feitas pela equipe.</p>
 </div>
 
 <button class="ponte" id="orc-para-proposta">Enviar para a Proposta →</button>
@@ -341,6 +350,11 @@ body{background:#faf6f2;min-height:100vh}
     <div class="cartao">
       <div class="eyebrow">Identificação</div>
       <h2 class="serif">Cliente & evento</h2>
+      <label>Modalidade</label>
+      <select id="f-mod">
+        <option value="montado">Decoração montada (equipe monta e desmonta)</option>
+        <option value="pm">Pegue e Monte (cliente retira e devolve)</option>
+      </select>
       <label>Nome do cliente</label>
       <input type="text" id="f-cliente" placeholder="Ex.: Ana Paula">
       <div class="dupla">
@@ -409,7 +423,9 @@ body{background:#faf6f2;min-height:100vh}
       </div>
 
       <div class="dupla" style="margin-top:14px">
-        <div><label>Sinal para reserva (R$)</label><input type="number" id="f-sinal" value="50" inputmode="decimal"></div>
+        <div><label>Sinal para reserva</label>
+          <div class="sinal-linha"><input type="number" id="f-sinal" value="50" inputmode="decimal">
+          <select id="f-sinal-tipo"><option value="valor">R$</option><option value="pct">%</option></select></div></div>
         <div><label>Validade da proposta</label><input type="text" id="f-validade" value="7 dias" placeholder="7 dias"></div>
       </div>
     </div>
@@ -417,7 +433,7 @@ body{background:#faf6f2;min-height:100vh}
     <div class="cartao">
       <div class="eyebrow">Fechamento</div>
       <h2 class="serif">Condições & observações</h2>
-      <textarea id="f-obs">Reserva garantida mediante sinal de R$50. Valor restante pago na retirada do kit. Itens devolvidos limpos e sem danos.</textarea>
+      <textarea id="f-obs">Reserva garantida mediante pagamento do sinal. Valor restante pago até o dia do evento, antes da montagem. Montagem e desmontagem feitas pela nossa equipe.</textarea>
       <div class="linha-botoes">
         <button class="btn secundario" id="bt-salvar-modelo">💾 Salvar modelo</button>
         <button class="btn secundario" id="bt-copiar">📋 Copiar p/ WhatsApp</button>
@@ -473,7 +489,16 @@ body{background:#faf6f2;min-height:100vh}
   <aside class="painel">
     <div class="painel-header">
       <h1>Gerador de Contrato</h1>
-      <p>GM CelebrArt · Pegue e Monte</p>
+      <p>GM CelebrArt · <span id="c_sub">Decoração montada</span></p>
+    </div>
+
+    <div class="grupo">
+      <div class="grupo-titulo">Modalidade</div>
+      <select id="c_mod" onchange="trocarModalidade()">
+        <option value="montado">Decoração montada (equipe monta e desmonta)</option>
+        <option value="pm">Pegue e Monte (cliente retira e devolve)</option>
+      </select>
+      <p class="dica" style="text-align:left;margin:6px 0 0">Muda as cláusulas, as datas e os textos do contrato e do checklist.</p>
     </div>
 
     <div class="grupo">
@@ -534,12 +559,12 @@ body{background:#faf6f2;min-height:100vh}
 
     <div class="grupo">
       <div class="grupo-titulo">Período de Locação</div>
-      <label>Entrega / Retirada</label>
+      <label id="lbl_ini">Montagem</label>
       <div class="lin2">
         <input id="p_entrega_data" type="date">
         <input id="p_entrega_compl" placeholder="às 09:30hrs no Clube Bosch">
       </div>
-      <label style="margin-top:10px">Devolução / Retirada</label>
+      <label style="margin-top:10px" id="lbl_fim">Desmontagem</label>
       <div class="lin2">
         <input id="p_devolucao_data" type="date">
         <input id="p_devolucao_compl" placeholder="às 20hrs no Clube Bosch">
@@ -550,12 +575,16 @@ body{background:#faf6f2;min-height:100vh}
     <div class="grupo">
       <div class="grupo-titulo">Valores</div>
       <div class="lin3">
-        <div><label>Kit básico</label><input id="v_kit" type="number" value="0" oninput="calc()"></div>
+        <div><label id="lbl_vkit">Decoração</label><input id="v_kit" type="number" value="0" oninput="calc()"></div>
         <div><label>Item extra</label><input id="v_extra" type="number" value="0" oninput="calc()"></div>
-        <div><label>Entrega</label><input id="v_entrega" type="number" value="0" oninput="calc()"></div>
+        <div><label id="lbl_vent">Montagem/frete</label><input id="v_entrega" type="number" value="0" oninput="calc()"></div>
       </div>
-      <label>Sinal para reserva (abatido)</label>
-      <input id="v_sinal" type="number" value="50" oninput="render()">
+      <label>Sinal para reserva (abatido do total)</label>
+      <div class="lin2" style="grid-template-columns:1fr 70px">
+        <input id="v_sinal" type="number" value="50" oninput="render()">
+        <select id="v_sinal_tipo" onchange="render()"><option value="valor">R$</option><option value="pct">%</option></select>
+      </div>
+      <p class="dica" id="sinal-info" style="text-align:left;margin:6px 0 0"></p>
       <div class="total-box"><span>TOTAL</span><span id="total-disp">R$ 0,00</span></div>
     </div>
 
@@ -608,7 +637,7 @@ body{background:#faf6f2;min-height:100vh}
       <!-- PÁGINA 1 -->
       <section class="pagina">
         <div class="ct-logo" id="logo-1"></div>
-        <div class="ct-titulo"><h2>CONTRATO DE LOCAÇÃO</h2><h3>PEGUE E MONTE</h3></div>
+        <div class="ct-titulo"><h2>CONTRATO DE LOCAÇÃO</h2><h3><span class="so-pm">PEGUE E MONTE</span><span class="so-mon">DECORAÇÃO COM MONTAGEM</span></h3></div>
 
         <div class="ct-parte-tit">C O N T R A T A N T E :</div>
         <div class="ct-dados">
@@ -633,7 +662,8 @@ body{background:#faf6f2;min-height:100vh}
 
         <div class="ct-sec">
           <div class="ct-sec-tit">1 OBJETO DO CONTRATO</div><div class="ct-sec-line"></div>
-          <p class="ct-intro">Locação do Kit "Pegue e Monte" no tema escolhido, contendo:</p>
+          <p class="ct-intro so-pm">Locação do Kit "Pegue e Monte" no tema escolhido, contendo:</p>
+          <p class="ct-intro so-mon">Locação de decoração no tema escolhido, com montagem e desmontagem pela contratada, contendo:</p>
           <ul id="o_itens"></ul>
         </div>
 
@@ -641,7 +671,9 @@ body{background:#faf6f2;min-height:100vh}
           <div class="ct-sec-tit">2 OBRIGAÇÕES DO CONTRATADO</div><div class="ct-sec-line"></div>
           <ul>
             <li>Entregar os itens limpos e em bom estado.</li>
-            <li>Disponibilizar para retirada ou realizar entrega/retirada conforme combinado.</li>
+            <li class="so-pm">Disponibilizar para retirada ou realizar entrega/retirada conforme combinado.</li>
+            <li class="so-mon">Realizar a montagem no local do evento, na data e horário combinados.</li>
+            <li class="so-mon">Realizar a desmontagem e a retirada dos itens após o evento, no horário combinado.</li>
           </ul>
         </div>
 
@@ -649,16 +681,20 @@ body{background:#faf6f2;min-height:100vh}
           <div class="ct-sec-tit">3 OBRIGAÇÕES DO CONTRATANTE</div><div class="ct-sec-line"></div>
           <ul>
             <li>Utilizar os itens somente para o evento contratado.</li>
-            <li>Manter os itens em bom estado e devolvê-los na data/hora combinada.</li>
-            <li>Retirar e devolver no endereço combinado (não permitido via Uber).</li>
-            <li>Estar presente no momento da entrega/retirada.</li>
-            <li>Garantir espaço no carro para transporte (porta-malas/bancos livres).</li>
+            <li class="so-pm">Manter os itens em bom estado e devolvê-los na data/hora combinada.</li>
+            <li class="so-pm">Retirar e devolver no endereço combinado (não permitido via Uber).</li>
+            <li class="so-pm">Estar presente no momento da entrega/retirada.</li>
+            <li class="so-pm">Garantir espaço no carro para transporte (porta-malas/bancos livres).</li>
+            <li class="so-mon">Garantir acesso ao local nos horários de montagem e desmontagem (portaria, elevador e liberação do salão).</li>
+            <li class="so-mon">Informar com antecedência as regras do local, como horários permitidos e ausência de elevador ou tomada.</li>
+            <li class="so-mon">Não mover, desmontar ou retirar peças da decoração durante o evento.</li>
+            <li class="so-mon">Indicar um responsável para acompanhar o início da montagem e a desmontagem.</li>
           </ul>
         </div>
 
         <div class="ct-sec">
           <div class="ct-sec-tit">4 DANOS E PERDAS</div><div class="ct-sec-line"></div>
-          <p>O contratante responde por perdas, quebras ou danos. Em caso de dano leve pagará o valor para conserto do item e em caso de dano irreparável, pagará o valor de reposição.</p>
+          <p>O contratante responde por perdas, quebras ou danos<span class="so-mon"> ocorridos entre o fim da montagem e o início da desmontagem</span>. Em caso de dano leve pagará o valor para conserto do item e em caso de dano irreparável, pagará o valor de reposição.</p>
         </div>
 
         <div class="ct-pagenum">- 1 -</div>
@@ -672,35 +708,44 @@ body{background:#faf6f2;min-height:100vh}
           <div class="ct-sec-tit">5 PERÍODO DE LOCAÇÃO</div><div class="ct-sec-line"></div>
           <p>5.1 A locação dos itens será valida no período de:</p>
           <ul class="ct-periodo">
-            <li>DATA DA ENTREGA/RETIRADA: <span id="o_entrega">—</span></li>
-            <li>DATA DA RETIRADA/DEVOLUÇÃO: <span id="o_devolucao">—</span></li>
+            <li><span class="so-pm">DATA DA ENTREGA/RETIRADA</span><span class="so-mon">MONTAGEM</span>: <span id="o_entrega">—</span></li>
+            <li><span class="so-pm">DATA DA RETIRADA/DEVOLUÇÃO</span><span class="so-mon">DESMONTAGEM</span>: <span id="o_devolucao">—</span></li>
           </ul>
-          <p>5.2 A devolução deverá acontecer até á hora do dia marcado para a devolução.</p>
-          <p>5.3 Em caso de o contratante não devolver os itens no prazo estabelecido, será cobrado uma multa diária de R$20,00 por dia atrasado.</p>
-          <p>5.4 Em caso de entrega e retirada será cobrado um valor referente ao trajeto de ida e volta do local do evento.</p>
-          <p>5.5 A retira é feita no endereço da contratada. Não será permitido retiradas e devoluções via Uber.</p>
-          <p>5.6 O contratante deverá estar no dia da retirada/entrega e da devolução/retirada do kit.</p>
-          <p>5.7 Solicitamos ao contratante que esteja com porta-malas e bancos traseiros do carro livres para que possa caber o kit.</p>
+          <div class="so-pm">
+            <p>5.2 A devolução deverá acontecer até a hora do dia marcado para a devolução.</p>
+            <p>5.3 Em caso de o contratante não devolver os itens no prazo estabelecido, será cobrada uma multa diária de R$20,00 por dia atrasado.</p>
+            <p>5.4 Em caso de entrega e retirada será cobrado um valor referente ao trajeto de ida e volta do local do evento.</p>
+            <p>5.5 A retirada é feita no endereço da contratada. Não serão permitidas retiradas e devoluções via Uber.</p>
+            <p>5.6 O contratante deverá estar presente no dia da retirada/entrega e da devolução/retirada do kit.</p>
+            <p>5.7 Solicitamos ao contratante que esteja com porta-malas e bancos traseiros do carro livres para que possa caber o kit.</p>
+          </div>
+          <div class="so-mon">
+            <p>5.2 A montagem e a desmontagem serão feitas pela equipe da contratada, nos horários acima.</p>
+            <p>5.3 Caso o local não esteja liberado no horário combinado, poderá ser cobrada taxa de espera ou de novo deslocamento.</p>
+            <p>5.4 O valor de montagem, desmontagem e deslocamento está descrito no item 6.</p>
+            <p>5.5 O contratante, ou o responsável indicado, deverá estar presente no início da montagem e na desmontagem para conferência dos itens.</p>
+          </div>
         </div>
 
         <div class="ct-sec">
           <div class="ct-sec-tit">6 VALOR E FORMA DE PAGAMENTO</div><div class="ct-sec-line"></div>
           <ul>
-            <li>Kit básico: <span id="o_kit">R$140,00</span></li>
+            <li><span class="so-pm">Kit básico</span><span class="so-mon">Decoração</span>: <span id="o_kit">R$140,00</span></li>
             <li>Item extra: <span id="o_extra">R$0,00</span></li>
-            <li>Entrega/retirada: <span id="o_ent_v">R$0,00</span></li>
+            <li><span class="so-pm">Entrega/retirada</span><span class="so-mon">Montagem, entrega e retirada</span>: <span id="o_ent_v">R$0,00</span></li>
             <li>Total: <b id="o_total">R$140,00</b></li>
           </ul>
           <p style="margin-top:6px">Condições:</p>
           <ul>
             <li>Sinal de <span id="o_sinal">R$50,00</span> para reserva (abatido do total).</li>
-            <li>Restante no dia da entrega/retirada.</li>
+            <li>Valor restante de <span id="o_rest">R$0,00</span>, pago <span class="so-pm">na retirada do kit.</span><span class="so-mon">até o dia do evento, antes do início da montagem.</span></li>
             <li>Formas: Pix, débito, crédito (1x sem juros, parcelado com juros da maquininha).</li>
           </ul>
           <p style="margin-top:6px">Multas ou taxas extras:</p>
           <ul>
-            <li>R$20,00 por dia de atraso na devolução.</li>
-            <li>Taxa extra em caso de entrega/retirada fora do combinado.</li>
+            <li class="so-pm">R$20,00 por dia de atraso na devolução.</li>
+            <li class="so-pm">Taxa extra em caso de entrega/retirada fora do combinado.</li>
+            <li class="so-mon">Taxa extra caso a montagem ou a desmontagem não possa ser feita no horário combinado.</li>
           </ul>
         </div>
 
@@ -734,16 +779,16 @@ body{background:#faf6f2;min-height:100vh}
             <div class="chk-nome" id="ck_nome">—</div>
             <div class="chk-linha"><span><span class="lbl">Endereço da festa:</span> <b id="ck_end">—</b></span><span><span class="lbl">Nº</span> <b id="ck_num">—</b></span></div>
             <div class="chk-linha"><span><span class="lbl">Bairro:</span> <b id="ck_bairro">—</b></span><span><span class="lbl">Contato:</span> <b id="ck_tel">—</b></span></div>
-            <div class="chk-linha"><span><span class="lbl">Data da retirada:</span> <b id="ck_retirada">—</b></span><span><span class="lbl">Data da devolução:</span> <b id="ck_devol">—</b></span></div>
+            <div class="chk-linha"><span><span class="lbl"><span class="so-pm">Data da retirada</span><span class="so-mon">Montagem</span>:</span> <b id="ck_retirada">—</b></span><span><span class="lbl"><span class="so-pm">Data da devolução</span><span class="so-mon">Desmontagem</span>:</span> <b id="ck_devol">—</b></span></div>
           </div>
         </div>
 
         <div class="chk-titulo" id="ck_titulo">—</div>
 
         <div class="chk-valores">
-          <div><span class="lbl">Valor do Kit:</span> <b id="ck_vkit">R$0,00</b></div>
+          <div><span class="lbl"><span class="so-pm">Valor do Kit</span><span class="so-mon">Valor da decoração</span>:</span> <b id="ck_vkit">R$0,00</b></div>
           <div><span class="lbl">Valor restante a ser pago:</span> <b id="ck_rest">R$0,00</b></div>
-          <div><span class="lbl">Valor da entrega:</span> <b id="ck_vent">R$0,00</b></div>
+          <div><span class="lbl"><span class="so-pm">Valor da entrega</span><span class="so-mon">Montagem/frete</span>:</span> <b id="ck_vent">R$0,00</b></div>
           <div><span class="lbl">Forma de pagamento:</span> <b id="ck_pgto">Pix</b></div>
           <div><span class="lbl">Valor do sinal:</span> <b id="ck_sinal">R$0,00</b></div>
         </div>
@@ -834,27 +879,22 @@ const catOculta=id=>{const c=CATS.find(x=>x.id===id);return !!(c&&c.oculta);};
 
 /*ACERVO-INI*/
 const ITENS_BASE=[
-  // ── materiais de uso e consumo (não aparecem para o cliente) ──
-  {n:'Spray de balão',c:60.00,cat:'materiais'},
+  {n:'Spray de balão',c:60,cat:'materiais'},
   {n:'Presilhas',c:25.25,cat:'materiais'},
-  {n:'Elástico amarelo',c:10.90,cat:'materiais'},
-  // ── painéis ──
-  {n:'Painel romano ripado',c:184.20,cat:'paineis'},
-  {n:'Painel romano metálico',c:125.00,cat:'paineis'},
-  {n:'Painel redondo metálico',c:125.00,cat:'paineis'},
-  // ── mesas e estantes ──
+  {n:'Elástico amarelo',c:10.9,cat:'materiais'},
+  {n:'Painel romano ripado',c:184.2,cat:'paineis'},
+  {n:'Painel romano metálico',c:125,cat:'paineis'},
+  {n:'Painel redondo metálico',c:125,cat:'paineis'},
   {n:'Mesas treliças',c:253.01,cat:'mesas'},
-  {n:'Cômoda fake amarela',c:180.00,cat:'mesas'},
-  {n:'Cômoda fake branca',c:90.00,cat:'mesas'},
-  // ── cilindros ──
-  {n:'Trio de cilindro ripado',c:442.20,cat:'cilindros'},
+  {n:'Cômoda fake amarela',c:180,cat:'mesas'},
+  {n:'Cômoda fake branca',c:90,cat:'mesas'},
+  {n:'Trio de cilindro ripado',c:442.2,cat:'cilindros'},
   {n:'Trio de cilindro',c:121.42,cat:'cilindros'},
-  // ── boleiras e bandejas ──
-  {n:'Kit boleiras espelhadas',c:174.00,cat:'bandejas'},
+  {n:'Kit boleiras espelhadas',c:174,cat:'bandejas'},
   {n:'Kit boleiras bambu (5)',c:91.22,cat:'bandejas'},
   {n:'Kit boleiras cristal',c:84.07,cat:'bandejas'},
   {n:'Vasos grandes bege (2)',c:70.92,cat:'bandejas'},
-  {n:'Kit boleiras rosa candy',c:68.20,cat:'bandejas'},
+  {n:'Kit boleiras rosa candy',c:68.2,cat:'bandejas'},
   {n:'Kit boleiras Patrulha Canina',c:67.79,cat:'bandejas'},
   {n:'Boleira amarelo candy',c:67.62,cat:'bandejas'},
   {n:'Kit boleiras dourado',c:66.68,cat:'bandejas'},
@@ -869,12 +909,11 @@ const ITENS_BASE=[
   {n:'Kit 2 bandejas laranja',c:24.76,cat:'bandejas'},
   {n:'Bandeja bambu redonda',c:22.18,cat:'bandejas'},
   {n:'Vasos grandes candy (2)',c:21.53,cat:'bandejas'},
-  {n:'Vasos de cristal (2)',c:29.70,cat:'bandejas'},
-  // ── capas e tecidos ──
+  {n:'Vasos de cristal (2)',c:29.7,cat:'bandejas'},
   {n:'Capas cilindro + painel redondo Safari Baby',c:119.51,cat:'capas'},
   {n:'Capas cilindro + painel redondo Patrulha Canina',c:108.72,cat:'capas'},
   {n:'Capas cilindro + painel redondo Guerreiras K-pop',c:105.63,cat:'capas'},
-  {n:'Tecido de linho',c:89.70,cat:'capas'},
+  {n:'Tecido de linho',c:89.7,cat:'capas'},
   {n:'Capas cilindro + painel redondo branca',c:80.73,cat:'capas'},
   {n:'Capas cilindro + painel romano Jardim Encantado',c:79.83,cat:'capas'},
   {n:'Capas cilindro + painel redondo Dino Baby',c:76.99,cat:'capas'},
@@ -882,47 +921,55 @@ const ITENS_BASE=[
   {n:'Capa painel romano azul bebê',c:52.87,cat:'capas'},
   {n:'Capa painel romano rosa bebê',c:52.87,cat:'capas'},
   {n:'Capa cilindro rosa',c:42.98,cat:'capas'},
-  // ── displays ──
-  {n:'Número MDF',c:230.00,cat:'displays'},
-  {n:'Placa Divino Espírito Santo',c:165.00,cat:'displays'},
+  {n:'Número MDF',c:230,cat:'displays'},
+  {n:'Placa Divino Espírito Santo',c:165,cat:'displays'},
   {n:'Display de mesa Safari Baby',c:83.98,cat:'displays'},
   {n:'Kit display de mesa flores, borboleta e coração',c:82.73,cat:'displays'},
-  {n:'Display de chão borboletas rosa',c:60.00,cat:'displays'},
+  {n:'Display de chão borboletas rosa',c:60,cat:'displays'},
   {n:'Display de mesa Dino Baby',c:47.95,cat:'displays'},
   {n:'Display de mesa Patrulha Canina',c:38.61,cat:'displays'},
-  {n:'Display de mesa Guerreiras K-pop',c:37.80,cat:'displays'},
+  {n:'Display de mesa Guerreiras K-pop',c:37.8,cat:'displays'},
   {n:'Display de chão Dino Baby',c:0,cat:'displays'},
-  // ── flores ──
   {n:'Buquês crisântemo & botão (2)',c:113.92,cat:'flores'},
-  {n:'Buquê crisântemos e botões rosa e branco',c:48.00,cat:'flores'},
+  {n:'Buquê crisântemos e botões rosa e branco',c:48,cat:'flores'},
   {n:'Flor artificial branco e rosa',c:43.09,cat:'flores'},
-  {n:'Mosquitinho',c:39.00,cat:'flores'},
-  {n:'Kit 2 arbustos artificiais pequenos',c:23.60,cat:'flores'},
-  // ── decoração ──
+  {n:'Mosquitinho',c:39,cat:'flores'},
+  {n:'Kit 2 arbustos artificiais pequenos',c:23.6,cat:'flores'},
   {n:'Cubo Baby',c:333.95,cat:'decoracao'},
   {n:'LED Happy Birthday',c:186.65,cat:'decoracao'},
   {n:'Urso grande',c:162.86,cat:'decoracao'},
   {n:'Escadinha lembrancinha branca',c:46.82,cat:'decoracao'},
   {n:'Escadinha lembrancinha bege',c:46.82,cat:'decoracao'},
-  {n:'Vaso de chão bege grande',c:45.00,cat:'decoracao'},
-  {n:'Estátua de mesa anjo 10cm',c:25.00,cat:'decoracao'},
-  {n:'Estátua de mesa anjo ajoelhado 20cm',c:20.00,cat:'decoracao'},
-  {n:'Estátua de mesa anjo 14cm',c:15.00,cat:'decoracao'},
+  {n:'Vaso de chão bege grande',c:45,cat:'decoracao'},
+  {n:'Estátua de mesa anjo 10cm',c:25,cat:'decoracao'},
+  {n:'Estátua de mesa anjo ajoelhado 20cm',c:20,cat:'decoracao'},
+  {n:'Estátua de mesa anjo 14cm',c:15,cat:'decoracao'},
   {n:'Urso pequeno',c:42.41,cat:'decoracao'},
   {n:'Mini cavalete',c:39.97,cat:'decoracao'},
-  {n:'Base chão balão',c:24.90,cat:'decoracao'},
-  // ── tapetes ──
-  {n:'Tapete rosa',c:103.80,cat:'tapetes'},
-  {n:'Tapete de crochê',c:90.00,cat:'tapetes'},
-  {n:'Tapete bege',c:73.40,cat:'tapetes'},
+  {n:'Base chão balão',c:24.9,cat:'decoracao'},
+  {n:'Tapete rosa',c:103.8,cat:'tapetes'},
+  {n:'Tapete de crochê',c:90,cat:'tapetes'},
+  {n:'Tapete bege',c:73.4,cat:'tapetes'},
   {n:'Tapete verde',c:71.58,cat:'tapetes'},
   {n:'Tapete azul royal',c:70.81,cat:'tapetes'},
-  // ── bolos fake ──
-  {n:'Bolo fake Guerreiras K-pop',c:74.50,cat:'bolos'},
-  {n:'Bolo fake Safari Baby',c:64.90,cat:'bolos'},
+  {n:'Bolo fake Guerreiras K-pop',c:74.5,cat:'bolos'},
+  {n:'Bolo fake Safari Baby',c:64.9,cat:'bolos'},
+  {n:'Estrela Pendente Glitter Dourado 26cm (9)',c:261.9,cat:'decoracao'},
+  {n:'Balões Estrela Verde e Vermelho',c:29.8,cat:'decoracao'},
+  {n:'Festão',c:78,cat:'decoracao'},
+  {n:'Guirlanda (8)',c:472,cat:'decoracao'},
+  {n:'Flor Dourada Enfeite Arvore (6)',c:29.92,cat:'decoracao'},
+  {n:'Flor Vermelha Enfeite Arvore (6)',c:29.92,cat:'decoracao'},
+  {n:'Saia Enfeite Arvore Vermelha e Verde',c:39.92,cat:'decoracao'},
+  {n:'Kit Bolas Dourada Pendentes Enfeite Arvore',c:104,cat:'decoracao'},
+  {n:'Kit Bola Vermelha Pendentes Enfeite Arvore',c:104,cat:'decoracao'},
+  {n:'Estrela Topo Arvore Dourada',c:23.99,cat:'decoracao'},
+  {n:'Pisca Pisca Led Branco Quente',c:125,cat:'decoracao'},
+  {n:'Arvore de Natal 3M',c:789.9,cat:'decoracao'},
+  {n:'Mini Velas a Pilha',c:70,cat:'decoracao'},
 ];
 /*ACERVO-FIM*/
-const ACERVO_VER=4;
+const ACERVO_VER=5;
 let EXTRAS_ACERVO=jparse(LS.get('gm_acervo_extra'),[]);
 if(!Array.isArray(EXTRAS_ACERVO))EXTRAS_ACERVO=[];
 
@@ -974,9 +1021,7 @@ const REN={
 };
 /* saíram do acervo: estantes e caixas são de armazenagem, balões entram por evento,
    e a bandeja lilás/laranja virou dois kits separados */
-const REMOVIDOS=['Estante','Estante (2ª)','Balões (lote)','Capas de cilindro','Capas cilindro azul bb',
-  'Bandeja lilás e laranja','Caixa organizadora 3','Máquina de balão',
-  'Capa painel romano rosa bebê + azul bebê'];
+const REMOVIDOS=[];
 
 if(!ACERVO){
   ACERVO=semear().concat(EXTRAS_ACERVO.map(it=>({n:it.n,c:+it.c,cat:CAT_PADRAO})));
@@ -1282,6 +1327,20 @@ $o('copy').onclick=()=>{
   });
 };
 
+let modalidade='montado';
+(function(){
+  const box=$o('orc-mod'); if(!box) return;
+  const hint=$o('orc-mod-hint');
+  const set=m=>{
+    modalidade=m;
+    box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.mod===m));
+    if(hint) hint.textContent = m==='pm'
+      ? 'Pegue e Monte: o cliente retira e devolve. Montagem e frete só se combinado.'
+      : 'Montagem, entrega e retirada feitas pela equipe.';
+  };
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>set(b.dataset.mod));
+  set('montado');
+})();
 function dados(){
   const p=+pctEl.value/100;
   let aluguel=0;const nomes=[];
@@ -1303,7 +1362,8 @@ function dados(){
     temAdesivo:ad>0,
     temArco:ar>0,
     servico:r2(mo+fr),
-    total:r2(aluguel+ad+ar+mo+fr)
+    total:r2(aluguel+ad+ar+mo+fr),
+    modalidade
   };
 }
 window.ORC={dados};
@@ -1339,10 +1399,13 @@ let estado = {
   kit:null,                    // { nome, val, inclui:[...] }
   itens:[],                    // extras cobrados à parte
   entregaDesc:'Entrega e retirada', entregaVal:'',
-  sinal:'50', validade:'7 dias',
-  obs:'Reserva garantida mediante sinal de R$50. Valor restante pago na retirada do kit. Itens devolvidos limpos e sem danos.',
+  sinal:'50', sinalTipo:'valor', modalidade:'montado', validade:'7 dias',
+  obs:'Reserva garantida mediante pagamento do sinal. Valor restante pago até o dia do evento, antes da montagem. Montagem e desmontagem feitas pela nossa equipe.',
   img:null, imgW:null, imgH:null, imgZoom:100, imgX:50, imgY:50
 };
+const OBS_PADRAO={ pm:'Reserva garantida mediante pagamento do sinal. Valor restante pago na retirada do kit. Itens devolvidos limpos e sem danos.', montado:'Reserva garantida mediante pagamento do sinal. Valor restante pago até o dia do evento, antes da montagem. Montagem e desmontagem feitas pela nossa equipe.' };
+const OBS_ANTIGA='Reserva garantida mediante sinal de R$50. Valor restante pago na retirada do kit. Itens devolvidos limpos e sem danos.';
+const ehMontado=()=>estado.modalidade!=='pm';
 let formato = 'retrato';
 const FORMATOS = { retrato:[1240,1754], quadrado:[1240,1240], stories:[1080,1920] };
 
@@ -1405,6 +1468,8 @@ function coletar(){
   estado.entregaDesc = $('f-entrega-desc').value.trim();
   estado.entregaVal = $('f-entrega-val').value;
   estado.sinal = $('f-sinal').value;
+  estado.sinalTipo = $('f-sinal-tipo').value;
+  estado.modalidade = $('f-mod').value;
   estado.validade = $('f-validade').value.trim();
   estado.obs = $('f-obs').value.trim();
   estado.itens = [...ROOT.querySelectorAll('#lista-itens .item')].map(el => ({
@@ -1434,6 +1499,8 @@ function preencherForm(){
   $('f-entrega-desc').value = estado.entregaDesc;
   $('f-entrega-val').value = estado.entregaVal;
   $('f-sinal').value = estado.sinal;
+  $('f-sinal-tipo').value = estado.sinalTipo==='pct'?'pct':'valor';
+  $('f-mod').value = estado.modalidade==='pm'?'pm':'montado';
   $('f-validade').value = estado.validade;
   $('f-obs').value = estado.obs;
   $('lista-itens').innerHTML = '';
@@ -1512,8 +1579,11 @@ function totais(){
   const extras = estado.itens.reduce((s,i) => s + (+i.val || 0), 0);
   const entrega = +estado.entregaVal || 0;
   const total = kit + extras + entrega;
-  const sinal = Math.min(+estado.sinal || 0, total);
-  return { kit, extras, entrega, total, sinal, restante: total - sinal };
+  const sv = +estado.sinal || 0;
+  const pct = estado.sinalTipo==='pct' ? Math.min(Math.max(sv,0),100) : null;
+  const bruto = pct!==null ? total*pct/100 : sv;
+  const sinal = Math.round(Math.min(Math.max(bruto,0), total)*100)/100;
+  return { kit, extras, entrega, total, sinal, pct, restante: Math.round((total - sinal)*100)/100 };
 }
 
 /* ───── render do SVG da proposta ───── */
@@ -1544,11 +1614,11 @@ function montarLayout(){
   const tamLogo = 132;
   img(LOGO_SRC, cx0 - tamLogo/2, y, tamLogo, tamLogo, 'contain');
   y += tamLogo + 30;
-  txt('DECORAÇÃO PERSONALIZADA · PEGUE E MONTE', cx0, y, {s:TXT, fill:'#c9607c', ls:3, anchor:'middle', w:500});
+  txt(ehMontado() ? 'DECORAÇÃO PERSONALIZADA · MONTAGEM COMPLETA' : 'DECORAÇÃO PERSONALIZADA · PEGUE E MONTE', cx0, y, {s:TXT, fill:'#c9607c', ls:3, anchor:'middle', w:500});
   y += 34;
   line(M, y, W-M, y, '#ece2d8', 2);
   y += 46;
-  txt('PROPOSTA DE LOCAÇÃO', cx0, y, {s:TIT, fill:'#c9607c', ls:4, w:500, anchor:'middle'});
+  txt(ehMontado() ? 'PROPOSTA DE DECORAÇÃO' : 'PROPOSTA DE LOCAÇÃO', cx0, y, {s:TIT, fill:'#c9607c', ls:4, w:500, anchor:'middle'});
   y += 30;
   const linhaInfo = (estado.numero ? 'Nº ' + estado.numero + '   ·   ' : '') +
                     'Emitida em ' + dataBR(new Date().toISOString().slice(0,10));
@@ -1645,10 +1715,10 @@ function montarLayout(){
   y += 96;
 
   if(t.sinal > 0){
-    txt('Sinal p/ reserva', M, y, {s:TXT, fill:'#888'});
+    txt('Sinal p/ reserva' + (t.pct!==null ? ' (' + t.pct + '%)' : ''), M, y, {s:TXT, fill:'#888'});
     txt(moeda(t.sinal), W-M, y, {s:TXT, w:500, anchor:'end'});
     y += 28;
-    txt('Restante na retirada', M, y, {s:TXT, fill:'#888'});
+    txt('Valor restante', M, y, {s:TXT, fill:'#888'});
     txt(moeda(t.restante), W-M, y, {s:TXT, w:500, anchor:'end'});
     y += 36;
   }
@@ -2026,8 +2096,8 @@ function textoWhatsApp(){
   L.push('');
   L.push('*Total: ' + moeda(t.total) + '*');
   if(t.sinal > 0){
-    L.push('Sinal p/ reserva: ' + moeda(t.sinal));
-    L.push('Restante na retirada: ' + moeda(t.restante));
+    L.push('Sinal p/ reserva' + (t.pct!==null ? ' (' + t.pct + '%)' : '') + ': ' + moeda(t.sinal));
+    L.push('Valor restante: ' + moeda(t.restante));
   }
   if(estado.validade) L.push('');
   if(estado.validade) L.push('_Proposta válida por ' + estado.validade + '._');
@@ -2060,8 +2130,8 @@ function novaProposta(){
   estado = {
     numero: proximoNumero(), cliente:'', zap:'', tema:'', aniv:'', idade:'', data:'', local:'',
     kit:null, itens:[], entregaDesc:'Entrega e retirada', entregaVal:'',
-    sinal:'50', validade:'7 dias',
-    obs:'Reserva garantida mediante sinal de R$50. Valor restante pago na retirada do kit. Itens devolvidos limpos e sem danos.',
+    sinal:'50', sinalTipo:'valor', modalidade:'montado', validade:'7 dias',
+    obs:OBS_PADRAO.montado,
     img:null, imgW:null, imgH:null, imgZoom:100, imgX:50, imgY:50
   };
   preencherForm(); atualizar();
@@ -2114,6 +2184,14 @@ $('f-zap').addEventListener('input', e => { e.target.value = mascaraTel(e.target
 ROOT.querySelectorAll('.coluna-form input, .coluna-form textarea').forEach(el =>
   el.addEventListener('input', atualizar));
 
+$('f-sinal-tipo').addEventListener('change', atualizar);
+$('f-mod').addEventListener('change', () => {
+  const obsEl=$('f-obs'), atual=obsEl.value.trim();
+  const ehPadrao = atual===OBS_PADRAO.pm || atual===OBS_PADRAO.montado || atual===OBS_ANTIGA || !atual;
+  if(ehPadrao) obsEl.value = OBS_PADRAO[$('f-mod').value];   // só troca se você não personalizou
+  atualizar();
+});
+
 ROOT.querySelectorAll('.chip.kit').forEach(c => c.onclick = () => escolherKit(c.dataset.kit));
 ROOT.querySelectorAll('.chip[data-extra]').forEach(c => c.onclick = () => {
   const [desc, val] = c.dataset.extra.split('|');
@@ -2162,6 +2240,9 @@ $('logo-topo').src = LOGO_SRC;
   if(salvo){
     try{ estado = Object.assign(estado, JSON.parse(salvo)); }catch(e){}
   }
+  if(!estado.sinalTipo) estado.sinalTipo='valor';
+  if(!estado.modalidade) estado.modalidade='montado';
+  if(estado.obs===OBS_ANTIGA) estado.obs=OBS_PADRAO[estado.modalidade];
   if(!estado.numero) estado.numero = proximoNumero();
   preencherForm();
   atualizar();
@@ -2178,7 +2259,15 @@ function receberOrcamento(d){
     inclui: (d.itens || []).slice()
   };
   if(d.temAdesivo) estado.kit.inclui.push('Adesivo personalizado no tema');
-  if(d.servico){ estado.entregaDesc = 'Montagem, entrega e retirada'; estado.entregaVal = String(d.servico); }
+  if(d.modalidade){
+    const obsEraPadrao = !estado.obs || estado.obs===OBS_PADRAO.pm || estado.obs===OBS_PADRAO.montado || estado.obs===OBS_ANTIGA;
+    estado.modalidade = d.modalidade;
+    if(obsEraPadrao) estado.obs = OBS_PADRAO[d.modalidade];
+  }
+  if(d.servico){
+    estado.entregaDesc = ehMontado() ? 'Montagem, entrega e retirada' : 'Entrega e retirada';
+    estado.entregaVal = String(d.servico);
+  }
   preencherForm(); atualizar();
   avisar('Orçamento aplicado na proposta ✓');
 }
@@ -2186,9 +2275,12 @@ function dadosParaContrato(){
   coletar(); const t = totais();
   return {
     cliente: estado.cliente, zap: estado.zap, tema: estado.tema, data: estado.data,
+    kitNome: estado.kit ? (estado.kit.nome||'') : '',
     kitInclui: estado.kit ? estado.kit.inclui.slice() : [],
     extras: estado.itens.map(i => i.desc).filter(Boolean),
-    valKit: t.kit, valExtras: t.extras, valEntrega: t.entrega, sinal: estado.sinal
+    valKit: t.kit, valExtras: t.extras, valEntrega: t.entrega,
+    sinal: estado.sinal, sinalTipo: estado.sinalTipo, modalidade: estado.modalidade,
+    entregaDesc: estado.entregaDesc
   };
 }
 window.PROP = { receberOrcamento, dadosParaContrato };
@@ -2355,9 +2447,10 @@ function confirmarExtras(){
 const $ = id => document.getElementById(id);
 
 /* ---------- ITENS DO KIT ---------- */
-function addItem(valor="", extra=true){
+function addItem(valor="", extra=true, doKit=false){
   const row = document.createElement('div');
   row.className = 'item-row';
+  if(doKit) row.dataset.kit = '1';
   row.innerHTML = `<input class="item-desc" type="text" value="${valor.replace(/"/g,'&quot;')}" oninput="render()" onblur="this.value=ucFirst(this.value);render()" placeholder="Descrição do item">
                    <label class="item-extra-lbl" title="Marcar X em Item Extra no checklist"><input type="checkbox" class="item-extra" ${extra?'checked':''} onchange="render()"> extra</label>
                    <button class="btn-x" onclick="this.parentNode.remove();render()">×</button>`;
@@ -2411,6 +2504,30 @@ function totalCalc(){
   return (Number($('v_kit').value)||0)+(Number($('v_extra').value)||0)+(Number($('v_entrega').value)||0);
 }
 function calc(){ $('total-disp').textContent = money(totalCalc()); render(); }
+function sinalValor(){
+  const v = Number($('v_sinal').value)||0, tot = totalCalc();
+  const pct = $('v_sinal_tipo') && $('v_sinal_tipo').value==='pct';
+  const bruto = pct ? tot*Math.min(Math.max(v,0),100)/100 : v;
+  return Math.round(Math.min(Math.max(bruto,0),tot)*100)/100;
+}
+function sinalTexto(){
+  const pct = $('v_sinal_tipo') && $('v_sinal_tipo').value==='pct';
+  return money(sinalValor()) + (pct ? ' ('+(Number($('v_sinal').value)||0)+'%)' : '');
+}
+function trocarModalidade(){
+  const pm = $('c_mod').value==='pm';
+  const aba = document.getElementById('aba-contrato');
+  aba.classList.toggle('mod-pm', pm);
+  aba.classList.toggle('mod-montado', !pm);
+  $('c_sub').textContent = pm ? 'Pegue e Monte' : 'Decoração montada';
+  $('lbl_ini').textContent = pm ? 'Entrega / Retirada' : 'Montagem';
+  $('lbl_fim').textContent = pm ? 'Devolução / Retirada' : 'Desmontagem';
+  $('lbl_vkit').textContent = pm ? 'Kit básico' : 'Decoração';
+  $('lbl_vent').textContent = pm ? 'Entrega' : 'Montagem/frete';
+  $('p_entrega_compl').placeholder = pm ? 'às 09:30hrs na nossa sede' : 'às 09:30hrs no Clube Bosch';
+  $('p_devolucao_compl').placeholder = pm ? 'às 10hrs na nossa sede' : 'às 22hrs no Clube Bosch';
+  render();
+}
 
 /* ---------- DATA BR ---------- */
 function dataBR(iso){
@@ -2490,7 +2607,9 @@ function render(){
   $('o_extra').textContent = money($('v_extra').value);
   $('o_ent_v').textContent = money($('v_entrega').value);
   $('o_total').textContent = money(totalCalc());
-  $('o_sinal').textContent = money($('v_sinal').value);
+  $('o_sinal').textContent = sinalTexto();
+  $('o_rest').textContent  = money(totalCalc() - sinalValor());
+  if($('sinal-info')) $('sinal-info').textContent = 'Sinal: '+money(sinalValor())+' · Valor restante: '+money(totalCalc() - sinalValor());
   $('total-disp').textContent = money(totalCalc());
 
   $('o_dia').textContent = $('d_dia').value || '___';
@@ -2502,7 +2621,7 @@ function render(){
 }
 
 /* itens digitados manualmente na lista (não pertencentes ao kit) → entram no checklist como extra */
-function normNome(s){ return s.toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim(); }
+function normNome(s){ return s.toLowerCase().replace(/\(.*?\)/g,'').replace(/-/g,' ').replace(/\s+/g,' ').trim(); }
 function itensManuaisExtras(){
   const conhecidos = new Set();
   Object.values(CATALOGO).forEach(k=>k.itens.forEach(it=>conhecidos.add(normNome(it))));
@@ -2510,6 +2629,7 @@ function itensManuaisExtras(){
   EXTRAS.forEach(e=>conhecidos.add(normNome(e.nome)));
   const out=[];
   document.querySelectorAll('#itens-lista .item-row').forEach(row=>{
+    if(row.dataset.kit==='1') return;
     const inp=row.querySelector('.item-desc'); if(!inp) return;
     const txt=(inp.value||'').trim(); if(!txt) return;
     let nome=txt, qtd=1;
@@ -2539,8 +2659,8 @@ function renderChecklist(){
 
   $('ck_vkit').textContent  = money($('v_kit').value);
   $('ck_vent').textContent  = money($('v_entrega').value);
-  $('ck_sinal').textContent = money($('v_sinal').value);
-  $('ck_rest').textContent  = money(totalCalc() - (Number($('v_sinal').value)||0));
+  $('ck_sinal').textContent = sinalTexto();
+  $('ck_rest').textContent  = money(totalCalc() - sinalValor());
   $('ck_pgto').textContent  = $('chk_pgto').value || '—';
   $('ck_obs').textContent   = $('chk_obs').value || '';
 
@@ -2630,7 +2750,7 @@ function gerarPDF(modo){
 function limparTudo(){
   ['c_nome','c_end','c_num','c_bairro','c_cpf','c_tel','c_data','c_tipo','c_tema','p_entrega_data','p_entrega_compl','p_devolucao_data','p_devolucao_compl','d_data','d_dia','d_mes','chk_obs'].forEach(i=>$(i).value='');
   $('sel-tema').value=''; $('sel-kit').value='';
-  $('v_kit').value=0; $('v_extra').value=0; $('v_entrega').value=0; $('v_sinal').value=50; $('d_ano').value='2026';
+  $('v_kit').value=0; $('v_extra').value=0; $('v_entrega').value=0; $('v_sinal').value=50; $('v_sinal_tipo').value='valor'; $('d_ano').value=String(new Date().getFullYear());
   $('chk_pgto').value='Pix';
   fotoManual=null;
   $('chk_foto').value='';
@@ -2661,7 +2781,7 @@ $('c_tel').addEventListener('input', e=>{ e.target.value = maskTel(e.target.valu
 initLogo();
 initChecklistQtd();
 addItem();
-render();
+trocarModalidade();
 
 </script>
 <script>
@@ -2691,14 +2811,26 @@ render();
     g('c_tel').value=maskTel(d.zap||'');
     g('c_tema').value=titleCasePT(d.tema||'');
     if(d.data) g('c_data').value=d.data;
+    g('c_mod').value = d.modalidade==='pm' ? 'pm' : 'montado';
+    // kit do catálogo (Bronze/Prata/Ouro): peças e quantidades vêm da grade do checklist
+    const kitKey = ({'kit bronze':'bronze','bronze':'bronze','kit prata':'prata','prata':'prata','kit ouro':'ouro','ouro':'ouro'})
+                   [String(d.kitNome||'').trim().toLowerCase()] || '';
+    g('sel-kit').value = kitKey;
+    const temaOpt = [...g('sel-tema').options].find(o=>o.value && o.value.toLowerCase()===String(d.tema||'').trim().toLowerCase());
+    g('sel-tema').value = temaOpt ? temaOpt.value : '';
+    if(kitKey) setChecklistQtd(kitKey);
+    else initChecklistQtd();
     g('itens-lista').innerHTML='';
-    d.kitInclui.forEach(n=>addItem(n));
-    d.extras.forEach(n=>addItem(n));
+    d.kitInclui.forEach(n=>addItem(n, false, !!kitKey));   // faz parte da decoração: não é extra
+    d.extras.forEach(n=>addItem(n, true));                 // cobrado à parte: extra
     if(!d.kitInclui.length&&!d.extras.length) addItem();
     g('v_kit').value=d.valKit||0;
     g('v_extra').value=d.valExtras||0;
     g('v_entrega').value=d.valEntrega||0;
     g('v_sinal').value=d.sinal||0;
+    g('v_sinal_tipo').value = d.sinalTipo==='pct' ? 'pct' : 'valor';
+    g('kit-info').textContent = kitKey ? 'Kit '+kitKey.charAt(0).toUpperCase()+kitKey.slice(1)+' veio da proposta. Quantidades do checklist preenchidas.' : 'Itens vieram da proposta.';
+    trocarModalidade();
     calc();
     ir('contrato');
   };
